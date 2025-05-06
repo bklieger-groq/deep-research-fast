@@ -15,16 +15,13 @@ export default function RootLayout({ children }) {
                             <div className="flex items-center gap-2">
                                 <span className="text-2xl font-bold text-primary-700">🔬</span>
                                 <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-700 to-primary-500 bg-clip-text text-transparent">
-                                    Research Assistant
+                                    <a href="/" rel="noopener noreferrer" className="">
+                                        Deep Research, Fast
+                                    </a>
                                 </h1>
                             </div>
                             <nav>
                                 <ul className="flex gap-4">
-                                    <li>
-                                        <a href="/" className="text-gray-600 hover:text-primary-600 transition-colors">
-                                            Home
-                                        </a>
-                                    </li>
                                     <li>
                                         <a href="https://groq.com" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-primary-600 transition-colors">
                                             Powered by Groq

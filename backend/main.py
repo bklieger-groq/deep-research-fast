@@ -38,7 +38,8 @@ client = Groq(api_key=GROQ_API_KEY)
 # Constants
 LLAMA_MODEL = "meta-llama/llama-4-maverick-17b-128e-instruct"
 LLAMA_MODEL_MINI = "meta-llama/llama-4-scout-17b-16e-instruct" 
-COMPOUND_MODEL = "compound-beta-mini"
+COMPOUND_MODEL = "compound-beta"
+COMPOUND_MODEL_MINI = "compound-beta-mini"
 
 app = FastAPI(title="Research Assistant API")
 
@@ -59,8 +60,8 @@ class ReportResponse(BaseModel):
     file_path: Optional[str] = None
 
 def generate_follow_up_questions(query):
-    """Generate 3 follow-up questions using Llama-4-Maverick model"""
-    prompt = f"""Based on the following research query, generate 3 specific follow-up questions 
+    """Generate 3 Research questions using Llama-4-Maverick model"""
+    prompt = f"""Based on the following research query, generate 3 specific Research questions 
     that would help gather more comprehensive information for compound research.
     The questions should explore different aspects of the topic and help elicit detailed information.
     
@@ -107,7 +108,7 @@ def generate_follow_up_questions(query):
     return questions
 
 def answer_question(query, question, question_num, total_questions):
-    """Use Compound-Beta to answer a follow-up question with sources and hyperlinks"""
+    """Use Compound-Beta to answer a Research question with sources and hyperlinks"""
     prompt = f"""You are a knowledgeable research assistant. Please answer the following question
     based on the context of this research query: "{query}"
 
@@ -120,7 +121,7 @@ def answer_question(query, question, question_num, total_questions):
     """
     
     completion = client.chat.completions.create(
-        model=COMPOUND_MODEL,
+        model=COMPOUND_MODEL_MINI,
         messages=[{"role": "user", "content": prompt}]
     )
     
@@ -135,7 +136,7 @@ def gather_research_data(query, qa_pairs):
         context += f"{i}. Question: {qa['question']}\nAnswer: {qa['answer']}\n\n"
     
     prompt = f"""You are a research assistant tasked with gathering detailed research data.
-    I need you to search for information related to this research query and the follow-up questions.
+    I need you to search for information related to this research query and the Research questions.
     
     {context}
     
@@ -168,7 +169,7 @@ def generate_complete_report(query, qa_pairs, research_data):
     # Create context with all the necessary information
     context = f"""Research Query: {query}
 
-Follow-up Questions and Answers:
+Research Questions and Answers:
 """
     
     for i, qa in enumerate(qa_pairs, 1):
@@ -190,7 +191,7 @@ Follow-up Questions and Answers:
     Requirements:
     - Structure each section with appropriate headers using markdown (# for title, ## for major sections, ### for subsections)
     - Include factual information with HYPERLINKED CITATIONS using markdown format: [Source Name](URL)
-    - Integrate information from both the follow-up questions/answers and the research data
+    - Integrate information from both the Research questions/answers and the research data
     - Provide your own analysis and insights in addition to the facts
     - Use academic, professional language throughout
     - Each section should have substantial content (3-4 paragraphs)
@@ -217,8 +218,8 @@ async def format_sse(data: str, event=None) -> str:
 async def research_process_generator(query):
     """Generate a comprehensive research report with streaming updates"""
     try:
-        # Step 1: Generate follow-up questions
-        yield await format_sse(json.dumps({"status": "progress", "step": "follow_up_questions", "message": "Generating follow-up questions..."}))
+        # Step 1: Generate Research questions
+        yield await format_sse(json.dumps({"status": "progress", "step": "follow_up_questions", "message": "Generating Research questions..."}))
         questions = generate_follow_up_questions(query)
         
         # List to store completed QA pairs
@@ -238,9 +239,8 @@ async def research_process_generator(query):
                 )
                 futures.append(future)
             
-            # Also submit the research data gathering task
-            yield await format_sse(json.dumps({"status": "progress", "step": "research_data", "message": "Gathering research data..."}))
-            research_future = executor.submit(gather_research_data, query, [])
+            # Step 2: Start answering questions (before research data)
+            yield await format_sse(json.dumps({"status": "progress", "step": "answering_questions", "message": "Starting to answer research questions...", "progress": 0}))
             
             # Process question answers as they complete
             total_questions = len(futures)
@@ -258,14 +258,11 @@ async def research_process_generator(query):
                     "progress": completed_questions / total_questions
                 }))
             
-            # Get research data
-            research_data = research_future.result()
-            
-            # If the research data task completed with empty qa_pairs, run it again with the full data
-            if not qa_pairs:
-                research_data = gather_research_data(query, qa_pairs)
+            # Step 3: Gather research data (after answering questions)
+            yield await format_sse(json.dumps({"status": "progress", "step": "research_data", "message": "Gathering additional research data..."}))
+            research_data = gather_research_data(query, qa_pairs)
         
-        # Generate the complete report
+        # Step 4: Generate the complete report
         yield await format_sse(json.dumps({"status": "progress", "step": "final_report", "message": "Generating final report..."}))
         report_content = generate_complete_report(query, qa_pairs, research_data)
         

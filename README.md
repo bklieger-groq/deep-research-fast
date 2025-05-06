@@ -1,13 +1,13 @@
 # Research Assistant
 
-A modern research assistant app powered by Groq's AI models that generates comprehensive research reports with follow-up questions and hyperlinked sources.
+A modern research assistant app powered by Groq's AI models that generates comprehensive research reports with Research questions and hyperlinked sources.
 
 ## Features
 
 - Beautiful Next.js frontend with a responsive, modern UI
 - FastAPI backend with streaming support
 - Real-time progress updates during research process
-- Comprehensive research reports with sections, follow-up questions, and hyperlinked sources
+- Comprehensive research reports with sections, Research questions, and hyperlinked sources
 - Download reports as Markdown files
 - Fully containerized with Docker for easy deployment
 
@@ -52,7 +52,7 @@ A modern research assistant app powered by Groq's AI models that generates compr
 1. Enter your research query in the input field
 2. Submit the form to start the research process
 3. Watch real-time progress as the system:
-   - Generates follow-up questions
+   - Generates Research questions
    - Answers research questions
    - Gathers comprehensive research data
    - Compiles the final report
@@ -60,7 +60,7 @@ A modern research assistant app powered by Groq's AI models that generates compr
    - Executive summary
    - Organized content sections
    - Sources with hyperlinks
-   - Follow-up questions and answers
+   - Research questions and answers
 5. Download the report as a Markdown file
 
 ## Development

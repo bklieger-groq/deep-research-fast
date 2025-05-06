@@ -9,6 +9,19 @@ const nextConfig = {
             {
                 source: '/api/:path*',
                 destination: `${backendHost}/api/:path*`,
+                // Add custom configuration for handling SSE streams properly
+                has: [
+                    {
+                        type: 'header',
+                        key: 'accept',
+                        value: 'text/event-stream',
+                    },
+                ],
+            },
+            {
+                // Regular API calls
+                source: '/api/:path*',
+                destination: `${backendHost}/api/:path*`,
             },
         ]
     },

@@ -4,11 +4,12 @@ import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { atomDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 import { Download, Share, ChevronDown, ChevronUp } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function ResearchReport({ report }) {
-    const [expandedSection, setExpandedSection] = useState(null)
-    const [showQA, setShowQA] = useState(false)
+    // Keep track of all expanded sections in an array
+    const [expandedSections, setExpandedSections] = useState([])
+    const [showQA, setShowQA] = useState(true)
 
     if (!report || !report.report) {
         return null
@@ -79,11 +80,19 @@ export default function ResearchReport({ report }) {
     // Extract title from the report
     const title = report.report.split('\n')[0].replace('# ', '')
 
+    // Set all sections to be expanded by default when sections array changes
+    useEffect(() => {
+        if (sections.length > 0) {
+            const allSectionIndices = Array.from({ length: sections.length - 1 }, (_, i) => i);
+            setExpandedSections(allSectionIndices);
+        }
+    }, [sections.length]);
+
     const toggleSection = (index) => {
-        if (expandedSection === index) {
-            setExpandedSection(null)
+        if (expandedSections.includes(index)) {
+            setExpandedSections(expandedSections.filter(i => i !== index))
         } else {
-            setExpandedSection(index)
+            setExpandedSections([...expandedSections, index])
         }
     }
 
@@ -181,7 +190,7 @@ export default function ResearchReport({ report }) {
                     />
                 </div>
 
-                {/* Section Accordion */}
+                {/* Section Accordion - All expanded by default */}
                 <div className="space-y-4 mb-8">
                     {sections.slice(1).map((section, index) => (
                         <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
@@ -190,13 +199,13 @@ export default function ResearchReport({ report }) {
                                 onClick={() => toggleSection(index)}
                             >
                                 <h3 className="font-semibold text-gray-800">{section.title}</h3>
-                                {expandedSection === index ?
+                                {expandedSections.includes(index) ?
                                     <ChevronUp size={20} className="text-gray-500" /> :
                                     <ChevronDown size={20} className="text-gray-500" />
                                 }
                             </button>
 
-                            {expandedSection === index && (
+                            {expandedSections.includes(index) && (
                                 <div className="p-4 markdown prose max-w-none">
                                     <ReactMarkdown
                                         children={section.content}
@@ -228,39 +237,29 @@ export default function ResearchReport({ report }) {
                 {/* Questions and Answers Section */}
                 {qaSection && (
                     <div className="mt-8">
-                        <button
-                            className="flex items-center gap-2 text-primary-600 font-medium mb-4"
-                            onClick={() => setShowQA(!showQA)}
-                        >
-                            {showQA ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                            {showQA ? 'Hide Questions & Answers' : 'Show Questions & Answers'}
-                        </button>
-
-                        {showQA && (
-                            <div className="markdown prose max-w-none border-t pt-4">
-                                <ReactMarkdown
-                                    children={qaSection}
-                                    components={{
-                                        code({ node, inline, className, children, ...props }) {
-                                            const match = /language-(\w+)/.exec(className || '')
-                                            return !inline && match ? (
-                                                <SyntaxHighlighter
-                                                    children={String(children).replace(/\n$/, '')}
-                                                    style={atomDark}
-                                                    language={match[1]}
-                                                    PreTag="div"
-                                                    {...props}
-                                                />
-                                            ) : (
-                                                <code className={className} {...props}>
-                                                    {children}
-                                                </code>
-                                            )
-                                        }
-                                    }}
-                                />
-                            </div>
-                        )}
+                        <div className="markdown prose max-w-none border-t pt-4">
+                            <ReactMarkdown
+                                children={qaSection}
+                                components={{
+                                    code({ node, inline, className, children, ...props }) {
+                                        const match = /language-(\w+)/.exec(className || '')
+                                        return !inline && match ? (
+                                            <SyntaxHighlighter
+                                                children={String(children).replace(/\n$/, '')}
+                                                style={atomDark}
+                                                language={match[1]}
+                                                PreTag="div"
+                                                {...props}
+                                            />
+                                        ) : (
+                                            <code className={className} {...props}>
+                                                {children}
+                                            </code>
+                                        )
+                                    }
+                                }}
+                            />
+                        </div>
                     </div>
                 )}
             </div>

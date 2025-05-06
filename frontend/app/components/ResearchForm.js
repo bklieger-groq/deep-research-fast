@@ -41,7 +41,7 @@ export default function ResearchForm({ onSubmit }) {
                     </button>
 
                     <div className="text-gray-500 text-sm">
-                        This process may take a few minutes to generate a comprehensive report
+                        This process may take a fast moment to generate a comprehensive report
                     </div>
                 </div>
             </form>

@@ -11,16 +11,16 @@ export default function Home() {
     const [progressStatus, setProgressStatus] = useState({ status: 'idle' })
     const [report, setReport] = useState(null)
     const [error, setError] = useState(null)
-    const [eventSource, setEventSource] = useState(null)
+    const [abortController, setAbortController] = useState(null)
 
     useEffect(() => {
-        // Cleanup function to close EventSource on component unmount
+        // Cleanup function to abort fetch on component unmount
         return () => {
-            if (eventSource) {
-                eventSource.close();
+            if (abortController) {
+                abortController.abort();
             }
         };
-    }, [eventSource]);
+    }, [abortController]);
 
     const startResearch = async (query) => {
         setQuery(query)
@@ -30,61 +30,94 @@ export default function Home() {
         setError(null)
 
         try {
-            // Close any existing EventSource
-            if (eventSource) {
-                eventSource.close();
+            // Abort any existing request
+            if (abortController) {
+                abortController.abort();
             }
 
-            // Create a new POST request with SSE
-            const encodedQuery = encodeURIComponent(query);
-            const es = new EventSource(`/api/research/stream?query=${encodedQuery}`);
-            setEventSource(es);
+            // Create a new abort controller
+            const controller = new AbortController();
+            setAbortController(controller);
 
-            // Handle SSE events
-            es.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
+            // Use fetch with signal from AbortController
+            const response = await fetch('/api/research/stream', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ query }),
+                signal: controller.signal
+            });
 
-                    if (data.status === 'progress') {
-                        setProgressStatus(data);
-                    } else if (data.status === 'complete') {
-                        setProgressStatus({ status: 'complete' });
-                        setReport(data);
-                        es.close();
-                        setEventSource(null);
-                    } else if (data.status === 'error') {
-                        setError(data.message);
-                        setProgressStatus({ status: 'error', message: data.message });
-                        es.close();
-                        setEventSource(null);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                // Decode and add to buffer
+                buffer += decoder.decode(value, { stream: true });
+
+                // Split on double newlines (SSE format)
+                const events = buffer.split('\n\n');
+                // Keep last potentially incomplete event in buffer
+                buffer = events.pop() || '';
+
+                for (const event of events) {
+                    // Skip empty events
+                    if (!event.trim()) continue;
+
+                    // Extract data
+                    const dataMatch = event.match(/^data: (.+)$/m);
+                    if (dataMatch && dataMatch[1]) {
+                        try {
+                            const data = JSON.parse(dataMatch[1]);
+                            console.log("Received update:", data);
+
+                            if (data.status === 'progress') {
+                                setProgressStatus(data);
+                            } else if (data.status === 'complete') {
+                                // Update progress to complete but don't set isResearching to false
+                                // This ensures the progress component stays visible
+                                setProgressStatus({
+                                    ...data,
+                                    status: 'complete',
+                                    step: 'final_report',
+                                    message: 'Report generation complete!'
+                                });
+                                setReport(data);
+                            } else if (data.status === 'error') {
+                                setError(data.message);
+                                setProgressStatus({ status: 'error', message: data.message });
+                                setIsResearching(false);
+                            }
+                        } catch (e) {
+                            console.error('Error parsing SSE data:', e, event);
+                        }
                     }
-                } catch (e) {
-                    console.error('Error parsing SSE data:', e, event.data);
                 }
-            };
-
-            // Handle EventSource errors
-            es.onerror = (err) => {
-                console.error('EventSource error:', err);
-                setError('Connection error. Please try again.');
-                setProgressStatus({ status: 'error', message: 'Connection error' });
-                es.close();
-                setEventSource(null);
-                setIsResearching(false);
-            };
-
+            }
         } catch (error) {
-            console.error('Error during research:', error);
-            setError(error.message);
-            setProgressStatus({ status: 'error', message: error.message });
-            setIsResearching(false);
+            // Don't treat aborts as errors
+            if (error.name !== 'AbortError') {
+                console.error('Error during research:', error);
+                setError(error.message);
+                setProgressStatus({ status: 'error', message: error.message });
+                setIsResearching(false);
+            }
         }
     }
 
     const resetResearch = () => {
-        if (eventSource) {
-            eventSource.close();
-            setEventSource(null);
+        if (abortController) {
+            abortController.abort();
+            setAbortController(null);
         }
 
         setQuery('')
@@ -100,16 +133,16 @@ export default function Home() {
                 {!isResearching && !report && (
                     <div className="mb-8">
                         <div className="text-center mb-12">
-                            <h1 className="text-4xl font-bold text-gray-800 mb-3">Comprehensive Research Assistant</h1>
+                            <h1 className="text-4xl font-bold text-gray-800 mb-3">Deep Research, Fast</h1>
                             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                                Enter your research query to generate a detailed report with follow-up questions, research data, and sources.
+                                Using compound-beta on Groq to generate fast deep research reports by leveraging several compound-beta agents working in parallel.
                             </p>
                         </div>
                         <ResearchForm onSubmit={startResearch} />
                     </div>
                 )}
 
-                {(isResearching || progressStatus.status === 'progress') && (
+                {(isResearching || progressStatus.status === 'progress' || progressStatus.status === 'complete') && (
                     <ResearchProgress status={progressStatus} query={query} />
                 )}
 
