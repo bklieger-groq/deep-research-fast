@@ -5,24 +5,24 @@ A modern research assistant app powered by Groq's AI models that generates compr
 ## Features
 
 - Beautiful Next.js frontend with a responsive, modern UI
-- FastAPI backend with streaming support
-- Real-time progress updates during research process
+- Integrated Next.js API routes replacing the separate FastAPI backend
+- Real-time progress updates during research process with Server-Sent Events (SSE)
 - Comprehensive research reports with sections, Research questions, and hyperlinked sources
 - Download reports as Markdown files
-- Fully containerized with Docker for easy deployment
+- Simplified deployment with a single Next.js application
 
 ## Technologies
 
 - **Frontend**: Next.js, React, Tailwind CSS, DaisyUI
-- **Backend**: FastAPI, Python
+- **Backend**: Next.js API Routes
 - **AI Models**: Groq LLMs (Llama-4-Maverick, Compound-Beta)
-- **Containerization**: Docker, Docker Compose
+- **Containerization**: Docker (optional)
 
 ## Setup & Installation
 
 ### Prerequisites
 
-- Docker and Docker Compose
+- Node.js (v16 or newer)
 - Groq API Key (sign up at [groq.com](https://groq.com))
 
 ### Installation
@@ -33,19 +33,24 @@ A modern research assistant app powered by Groq's AI models that generates compr
    cd research-assistant
    ```
 
-2. Create a `.env` file with your Groq API key:
+2. Install dependencies:
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+3. Create a `.env.local` file in the frontend directory with your Groq API key:
    ```
    GROQ_API_KEY=your_groq_api_key_here
    ```
 
-3. Start the application:
+4. Start the application:
    ```bash
-   docker-compose up -d
+   npm run dev
    ```
 
-4. Access the application:
-   - Frontend: [http://localhost:3000](http://localhost:3000)
-   - Backend API: [http://localhost:8000](http://localhost:8000)
+5. Access the application:
+   - [http://localhost:3000](http://localhost:3000)
 
 ## Usage
 
@@ -63,25 +68,17 @@ A modern research assistant app powered by Groq's AI models that generates compr
    - Research questions and answers
 5. Download the report as a Markdown file
 
-## Development
+## Docker Deployment (Optional)
 
-### Local Development
+If you prefer using Docker:
 
-To run the services locally without Docker:
+1. Build and start the container:
+   ```bash
+   docker build -t research-assistant ./frontend
+   docker run -p 3000:3000 -e GROQ_API_KEY=your_groq_api_key_here research-assistant
+   ```
 
-#### Backend
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload
-```
-
-#### Frontend
-```bash
-cd frontend
-npm install
-npm run dev
-```
+2. Access the application at [http://localhost:3000](http://localhost:3000)
 
 ## License
 
