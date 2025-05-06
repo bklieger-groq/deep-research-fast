@@ -207,11 +207,18 @@ Follow-up Questions and Answers:
     
     return completion.choices[0].message.content
 
+async def format_sse(data: str, event=None) -> str:
+    """Format data as SSE event"""
+    message = f"data: {data}"
+    if event is not None:
+        message = f"event: {event}\n{message}"
+    return message + "\n\n"
+
 async def research_process_generator(query):
     """Generate a comprehensive research report with streaming updates"""
     try:
         # Step 1: Generate follow-up questions
-        yield json.dumps({"status": "progress", "step": "follow_up_questions", "message": "Generating follow-up questions..."})
+        yield await format_sse(json.dumps({"status": "progress", "step": "follow_up_questions", "message": "Generating follow-up questions..."}))
         questions = generate_follow_up_questions(query)
         
         # List to store completed QA pairs
@@ -232,7 +239,7 @@ async def research_process_generator(query):
                 futures.append(future)
             
             # Also submit the research data gathering task
-            yield json.dumps({"status": "progress", "step": "research_data", "message": "Gathering research data..."})
+            yield await format_sse(json.dumps({"status": "progress", "step": "research_data", "message": "Gathering research data..."}))
             research_future = executor.submit(gather_research_data, query, [])
             
             # Process question answers as they complete
@@ -244,12 +251,12 @@ async def research_process_generator(query):
                 qa_pairs.append({"question": result["question"], "answer": result["answer"]})
                 completed_questions += 1
                 
-                yield json.dumps({
+                yield await format_sse(json.dumps({
                     "status": "progress", 
                     "step": "answering_questions", 
                     "message": f"Answered question {completed_questions}/{total_questions}: {result['question']}",
                     "progress": completed_questions / total_questions
-                })
+                }))
             
             # Get research data
             research_data = research_future.result()
@@ -259,7 +266,7 @@ async def research_process_generator(query):
                 research_data = gather_research_data(query, qa_pairs)
         
         # Generate the complete report
-        yield json.dumps({"status": "progress", "step": "final_report", "message": "Generating final report..."})
+        yield await format_sse(json.dumps({"status": "progress", "step": "final_report", "message": "Generating final report..."}))
         report_content = generate_complete_report(query, qa_pairs, research_data)
         
         # Add Q&A section at the end of the report
@@ -270,26 +277,44 @@ async def research_process_generator(query):
         final_report = report_content + qa_section
         
         # Return the final result
-        yield json.dumps({
+        yield await format_sse(json.dumps({
             "status": "complete", 
             "report": final_report, 
-        })
+        }))
         
     except Exception as e:
         logger.error(f"Error in research process: {str(e)}")
         error_message = f"An error occurred during the research process: {str(e)}"
-        yield json.dumps({"status": "error", "message": error_message})
+        yield await format_sse(json.dumps({"status": "error", "message": error_message}))
 
 @app.get("/")
 async def root():
     return {"message": "Research Assistant API is running"}
 
 @app.post("/api/research/stream")
-async def start_research_stream(query_data: QueryModel):
-    """Start the research process with streaming updates"""
+async def post_research_stream(query_data: QueryModel):
+    """Start the research process with streaming updates (POST method)"""
     return StreamingResponse(
         research_process_generator(query_data.query),
-        media_type="text/event-stream"
+        media_type="text/event-stream",
+        headers={
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Content-Type': 'text/event-stream'
+        }
+    )
+
+@app.get("/api/research/stream")
+async def get_research_stream(query: str = Query(..., description="Research query to process")):
+    """Start the research process with streaming updates (GET method for SSE)"""
+    return StreamingResponse(
+        research_process_generator(query),
+        media_type="text/event-stream",
+        headers={
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Content-Type': 'text/event-stream'
+        }
     )
 
 if __name__ == "__main__":

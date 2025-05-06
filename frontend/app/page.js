@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ResearchForm from './components/ResearchForm'
 import ResearchProgress from './components/ResearchProgress'
 import ResearchReport from './components/ResearchReport'
@@ -11,6 +11,16 @@ export default function Home() {
     const [progressStatus, setProgressStatus] = useState({ status: 'idle' })
     const [report, setReport] = useState(null)
     const [error, setError] = useState(null)
+    const [eventSource, setEventSource] = useState(null)
+
+    useEffect(() => {
+        // Cleanup function to close EventSource on component unmount
+        return () => {
+            if (eventSource) {
+                eventSource.close();
+            }
+        };
+    }, [eventSource]);
 
     const startResearch = async (query) => {
         setQuery(query)
@@ -20,59 +30,63 @@ export default function Home() {
         setError(null)
 
         try {
-            const response = await fetch('/api/research/stream', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ query }),
-            })
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`)
+            // Close any existing EventSource
+            if (eventSource) {
+                eventSource.close();
             }
 
-            const reader = response.body.getReader()
-            const decoder = new TextDecoder()
+            // Create a new POST request with SSE
+            const encodedQuery = encodeURIComponent(query);
+            const es = new EventSource(`/api/research/stream?query=${encodedQuery}`);
+            setEventSource(es);
 
-            while (true) {
-                const { value, done } = await reader.read()
+            // Handle SSE events
+            es.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
 
-                if (done) {
-                    break
-                }
-
-                const text = decoder.decode(value)
-                const lines = text.split('\n').filter(line => line.trim() !== '')
-
-                for (const line of lines) {
-                    try {
-                        const data = JSON.parse(line)
-
-                        if (data.status === 'progress') {
-                            setProgressStatus(data)
-                        } else if (data.status === 'complete') {
-                            setProgressStatus({ status: 'complete' })
-                            setReport(data)
-                        } else if (data.status === 'error') {
-                            setError(data.message)
-                            setProgressStatus({ status: 'error', message: data.message })
-                        }
-                    } catch (e) {
-                        console.error('Error parsing stream data:', e)
+                    if (data.status === 'progress') {
+                        setProgressStatus(data);
+                    } else if (data.status === 'complete') {
+                        setProgressStatus({ status: 'complete' });
+                        setReport(data);
+                        es.close();
+                        setEventSource(null);
+                    } else if (data.status === 'error') {
+                        setError(data.message);
+                        setProgressStatus({ status: 'error', message: data.message });
+                        es.close();
+                        setEventSource(null);
                     }
+                } catch (e) {
+                    console.error('Error parsing SSE data:', e, event.data);
                 }
-            }
+            };
+
+            // Handle EventSource errors
+            es.onerror = (err) => {
+                console.error('EventSource error:', err);
+                setError('Connection error. Please try again.');
+                setProgressStatus({ status: 'error', message: 'Connection error' });
+                es.close();
+                setEventSource(null);
+                setIsResearching(false);
+            };
+
         } catch (error) {
-            console.error('Error during research:', error)
-            setError(error.message)
-            setProgressStatus({ status: 'error', message: error.message })
-        } finally {
-            setIsResearching(false)
+            console.error('Error during research:', error);
+            setError(error.message);
+            setProgressStatus({ status: 'error', message: error.message });
+            setIsResearching(false);
         }
     }
 
     const resetResearch = () => {
+        if (eventSource) {
+            eventSource.close();
+            setEventSource(null);
+        }
+
         setQuery('')
         setIsResearching(false)
         setProgressStatus({ status: 'idle' })
