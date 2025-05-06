@@ -34,14 +34,14 @@ export default function ResearchForm({ onSubmit }) {
                     <button
                         type="submit"
                         disabled={!query.trim()}
-                        className="btn btn-primary px-6 py-3 flex items-center gap-2"
+                        className="btn btn-primary px-6 py-3 flex items-center gap-2 text-white"
                     >
                         <Search size={18} />
                         Start Research
                     </button>
 
                     <div className="text-gray-500 text-sm">
-                        This process may take a fast moment to generate a comprehensive report
+                        This process may take several minutes. Just kidding, its powered by Groq. Expect results in ~10-20 seconds.
                     </div>
                 </div>
             </form>

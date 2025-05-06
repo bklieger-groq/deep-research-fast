@@ -168,10 +168,10 @@ export default function ResearchProgress({ status, query }) {
             <div className="mt-6 text-center text-sm text-gray-500">
                 {status.status === 'complete'
                     ? <p>Report generation complete! You can view the results below.</p>
-                    : <p>This process may take several minutes to generate a comprehensive report</p>
+                    : <p>This process may take several minutes. Just kidding, its powered by Groq. Expect results in ~10-20 seconds.</p>
                 }
             </div>
-        </div>
+        </div >
     )
 }
 
@@ -225,9 +225,10 @@ function ProgressStage({ title, isActive, isDone, progress, timing }) {
 
 function ResearchSources({ sources }) {
     const [expanded, setExpanded] = useState(false)
-    const displayCount = expanded ? sources.length : Math.min(3, sources.length)
 
-    console.log("ResearchSources component received sources:", sources);
+    // Deduplicate sources
+    const uniqueSources = [...new Set(sources)];
+    const displayCount = expanded ? uniqueSources.length : Math.min(3, uniqueSources.length)
 
     // Function to format domain from URL and ensure URL is properly formatted
     const formatDomain = (url) => {
@@ -276,9 +277,9 @@ function ResearchSources({ sources }) {
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2 text-gray-700">
                     <Book size={18} />
-                    <h3 className="font-medium">Works Consulted ({sources.length})</h3>
+                    <h3 className="font-medium">Works Consulted ({uniqueSources.length})</h3>
                 </div>
-                {sources.length > 3 && (
+                {uniqueSources.length > 3 && (
                     <button
                         onClick={() => setExpanded(!expanded)}
                         className="text-gray-500 hover:text-gray-700"
@@ -289,7 +290,7 @@ function ResearchSources({ sources }) {
             </div>
 
             <div className="space-y-2">
-                {sources.slice(0, displayCount).map((url, index) => (
+                {uniqueSources.slice(0, displayCount).map((url, index) => (
                     <a
                         key={index}
                         href={formatUrl(url)}
@@ -309,16 +310,16 @@ function ResearchSources({ sources }) {
                 ))}
             </div>
 
-            {sources.length > 3 && expanded === false && (
+            {uniqueSources.length > 3 && expanded === false && (
                 <button
                     onClick={() => setExpanded(true)}
                     className="mt-2 text-sm text-gray-600 hover:text-gray-800 font-medium"
                 >
-                    Show {sources.length - 3} more sources
+                    Show {uniqueSources.length - 3} more sources
                 </button>
             )}
 
-            {expanded && sources.length > 3 && (
+            {expanded && uniqueSources.length > 3 && (
                 <button
                     onClick={() => setExpanded(false)}
                     className="mt-2 text-sm text-gray-600 hover:text-gray-800 font-medium"
