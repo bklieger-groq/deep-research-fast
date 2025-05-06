@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { Brain, FileQuestion, BookOpen, FileText, CheckCircle, AlertCircle, Link, ExternalLink, Book, ChevronUp, ChevronDown } from 'lucide-react'
+import { jsPDF } from 'jspdf'
+import html2canvas from 'html2canvas'
 
 export default function ResearchProgress({ status, query }) {
     const [progress, setProgress] = useState(0)
     const [sources, setSources] = useState([])
     const [totalDuration, setTotalDuration] = useState(null)
+    const [showShareMessage, setShowShareMessage] = useState(false)
 
     useEffect(() => {
         if (status.progress) {
@@ -36,6 +39,52 @@ export default function ResearchProgress({ status, query }) {
     useEffect(() => {
         console.log("Current sources state:", sources);
     }, [sources])
+
+    // PDF generation and download function
+    const generatePDF = async () => {
+        if (!status.report) return;
+
+        // Find the report element - this should be updated to target the actual report container
+        const reportElement = document.getElementById('research-report-container');
+        if (!reportElement) {
+            console.error('Report element not found');
+            return;
+        }
+
+        try {
+            const title = status.report.split('\n')[0].replace('# ', '') || 'research';
+            const filename = `research-report-${title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.pdf`;
+
+            const canvas = await html2canvas(reportElement, {
+                scale: 1.5, // Higher quality
+                useCORS: true,
+                logging: false,
+                allowTaint: true
+            });
+
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'px',
+                format: [canvas.width, canvas.height]
+            });
+
+            // Calculate the PDF width and height to maintain aspect ratio
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+            pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(filename);
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+        }
+    };
+
+    // Function to show Coming Soon message for share
+    const handleShareClick = () => {
+        setShowShareMessage(true);
+        setTimeout(() => setShowShareMessage(false), 3000); // Hide after 3 seconds
+    };
 
     const getStepIcon = (step) => {
         switch (step) {
@@ -171,7 +220,7 @@ export default function ResearchProgress({ status, query }) {
                     : <p>This process may take several minutes. Just kidding, its powered by Groq. Expect results in ~10-20 seconds.</p>
                 }
             </div>
-        </div >
+        </div>
     )
 }
 

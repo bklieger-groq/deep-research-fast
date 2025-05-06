@@ -11,6 +11,8 @@ export default function ResearchReport({ report }) {
     const [expandedSections, setExpandedSections] = useState([])
     const [showQA, setShowQA] = useState(true)
     const [expandedSources, setExpandedSources] = useState(false)
+    const [showShareMessage, setShowShareMessage] = useState(false)
+    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
 
     if (!report || !report.report) {
         return null
@@ -97,43 +99,82 @@ export default function ResearchReport({ report }) {
         }
     }
 
-    const handleDownload = () => {
-        const link = document.createElement('a')
-        const filename = `research-report-${title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.md`
+    const handleDownload = async () => {
+        try {
+            setIsGeneratingPDF(true);
 
-        // Create a blob from the markdown content
-        const blob = new Blob([report.report], { type: 'text/markdown' })
-        const url = URL.createObjectURL(blob)
+            // Get the title for the filename
+            const title = report.report.split('\n')[0].replace('# ', '') || 'research';
+            const filename = `research-report-${title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.pdf`;
 
-        link.href = url
-        link.download = filename
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        URL.revokeObjectURL(url)
+            // Create a simple text-to-pdf fallback approach that works in browsers
+            // Use the print dialog
+            const printWindow = window.open('', '_blank');
+
+            if (!printWindow) {
+                alert('Please allow popups for PDF generation');
+                setIsGeneratingPDF(false);
+                return;
+            }
+
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${title}</title>
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+                    <style>
+                        body {
+                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+                            line-height: 1.6;
+                            padding: 20px;
+                            max-width: 800px;
+                            margin: 0 auto;
+                        }
+                        .markdown-body { font-size: 12px; }
+                        .markdown-body pre > code { white-space: pre-wrap; }
+                        @media print {
+                            @page { margin: 20mm; }
+                            body { padding: 0; }
+                        }
+                    </style>
+                </head>
+                <body class="markdown-body">
+                    <div id="content"></div>
+                </body>
+                </html>
+            `);
+
+            printWindow.document.close();
+
+            // Add script for marked
+            const script = printWindow.document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+            script.onload = function () {
+                const contentDiv = printWindow.document.getElementById('content');
+                contentDiv.innerHTML = printWindow.marked.parse(report.report);
+
+                setTimeout(() => {
+                    printWindow.print();
+                    printWindow.onafterprint = function () {
+                        printWindow.close();
+                        setIsGeneratingPDF(false);
+                    };
+                }, 1000);
+            };
+
+            printWindow.document.head.appendChild(script);
+
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            setIsGeneratingPDF(false);
+        }
     }
 
     const handleShare = () => {
-        if (navigator.share && report.report) {
-            navigator.share({
-                title: title,
-                text: 'Check out this research report on ' + title,
-                // The actual report content is too large to share via the Web Share API
-                // so we're only sharing the title
-            })
-                .catch(err => {
-                    console.error('Error sharing:', err)
-                })
-        } else {
-            // Fallback to copying to clipboard
-            navigator.clipboard.writeText(title)
-                .then(() => {
-                    alert('Title copied to clipboard')
-                })
-                .catch(err => {
-                    console.error('Could not copy text: ', err)
-                })
-        }
+        // Show "Coming soon!" message
+        setShowShareMessage(true);
+        setTimeout(() => setShowShareMessage(false), 3000); // Hide after 3 seconds
     }
 
     // Function to format domain from URL and ensure URL is properly formatted
@@ -187,25 +228,30 @@ export default function ResearchReport({ report }) {
                 <div className="flex flex-wrap gap-3">
                     <button
                         onClick={handleDownload}
+                        disabled={isGeneratingPDF}
                         className="btn btn-sm btn-outline flex items-center gap-2"
-                        disabled={!report.file_path}
                     >
                         <Download size={16} />
-                        Download Report
+                        {isGeneratingPDF ? 'Generating PDF...' : 'Download Report'}
                     </button>
 
                     <button
                         onClick={handleShare}
-                        className="btn btn-sm btn-outline flex items-center gap-2"
+                        className="btn btn-sm btn-outline flex items-center gap-2 relative"
                     >
                         <Share size={16} />
                         Share
+                        {showShareMessage && (
+                            <div className="absolute -top-10 left-0 right-0 bg-gray-800 text-white text-xs py-1 px-2 rounded opacity-90">
+                                Coming soon!
+                            </div>
+                        )}
                     </button>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className="markdown-container">
+            <div id="research-report-container" className="markdown-container">
                 {/* Render the first paragraph (summary) with full markdown */}
                 <div className="markdown prose max-w-none mb-8">
                     <ReactMarkdown
