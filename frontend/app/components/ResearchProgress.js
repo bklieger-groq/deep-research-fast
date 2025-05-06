@@ -6,6 +6,7 @@ import { Brain, FileQuestion, BookOpen, FileText, CheckCircle, AlertCircle, Link
 export default function ResearchProgress({ status, query }) {
     const [progress, setProgress] = useState(0)
     const [sources, setSources] = useState([])
+    const [totalDuration, setTotalDuration] = useState(null)
 
     useEffect(() => {
         if (status.progress) {
@@ -23,6 +24,11 @@ export default function ResearchProgress({ status, query }) {
             setSources(status.sources)
         } else {
             console.log("No sources found in status:", status);
+        }
+
+        // Update total duration if available
+        if (status.timings && status.timings.total) {
+            setTotalDuration(status.timings.total.duration);
         }
     }, [status])
 
@@ -57,6 +63,12 @@ export default function ResearchProgress({ status, query }) {
         return 'Research in Progress'
     }
 
+    // Format duration in seconds with 1 decimal point
+    const formatDuration = (ms) => {
+        if (!ms) return '';
+        return `${(ms / 1000).toFixed(1)} seconds`;
+    };
+
     // Define the correct step order and get step progress
     const stepOrder = ['follow_up_questions', 'answering_questions', 'research_data', 'final_report'];
 
@@ -88,6 +100,9 @@ export default function ResearchProgress({ status, query }) {
             <div className="text-center mb-6">
                 <h2 className="text-xl font-semibold text-gray-800 mb-2">{getStatusTitle()}</h2>
                 <p className="text-gray-600">{query}</p>
+                {totalDuration && (
+                    <p className="text-gray-500 text-sm mt-1">Total time: {formatDuration(totalDuration)}</p>
+                )}
             </div>
 
             <div className="h-2 bg-gray-100 rounded-full mb-6 overflow-hidden">
@@ -122,22 +137,26 @@ export default function ResearchProgress({ status, query }) {
                 <ProgressStage
                     title="Generating Research Questions"
                     {...getStepStatus('follow_up_questions')}
+                    timing={status.timings?.steps?.follow_up_questions}
                 />
 
                 <ProgressStage
                     title="Answering Research Questions"
                     {...getStepStatus('answering_questions')}
                     progress={status.step === 'answering_questions' ? progress : 0}
+                    timing={status.timings?.steps?.answering_questions}
                 />
 
                 <ProgressStage
                     title="Gathering Additional Research Data"
                     {...getStepStatus('research_data')}
+                    timing={status.timings?.steps?.research_data}
                 />
 
                 <ProgressStage
                     title="Compiling Final Report"
                     {...getStepStatus('final_report')}
+                    timing={status.timings?.steps?.final_report}
                 />
             </div>
 
@@ -156,7 +175,13 @@ export default function ResearchProgress({ status, query }) {
     )
 }
 
-function ProgressStage({ title, isActive, isDone, progress }) {
+function ProgressStage({ title, isActive, isDone, progress, timing }) {
+    // Format duration in seconds with 1 decimal point
+    const formatDuration = (ms) => {
+        if (!ms) return '';
+        return `${(ms / 1000).toFixed(1)}s`;
+    };
+
     return (
         <div className={`flex items-center gap-3 p-3 rounded-lg border ${isActive ? 'border-primary-300 bg-primary-50' :
             isDone ? 'border-green-200 bg-green-50' :
@@ -174,10 +199,16 @@ function ProgressStage({ title, isActive, isDone, progress }) {
             </div>
 
             <div className="flex-1">
-                <p className={`font-medium ${isDone ? 'text-green-700' :
-                    isActive ? 'text-primary-700' :
-                        'text-gray-500'
-                    }`}>{title}</p>
+                <div className="flex justify-between items-center">
+                    <p className={`font-medium ${isDone ? 'text-green-700' :
+                        isActive ? 'text-primary-700' :
+                            'text-gray-500'
+                        }`}>{title}</p>
+
+                    {timing && timing.duration && (
+                        <span className="text-xs text-gray-500">{formatDuration(timing.duration)}</span>
+                    )}
+                </div>
 
                 {isActive && progress > 0 && (
                     <div className="w-full bg-primary-100 h-1.5 mt-2 rounded-full overflow-hidden">

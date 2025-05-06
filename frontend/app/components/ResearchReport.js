@@ -206,47 +206,6 @@ export default function ResearchReport({ report }) {
                 </div>
             </div>
 
-            {/* Research Sources Section */}
-            {report.sources && report.sources.length > 0 && (
-                <div className="mb-6 bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2 text-gray-700">
-                            <Book size={18} />
-                            <h3 className="font-medium">Works Consulted ({report.sources.length})</h3>
-                        </div>
-                        <button
-                            onClick={() => setExpandedSources(!expandedSources)}
-                            className="text-gray-500 hover:text-gray-700"
-                        >
-                            {expandedSources ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                        </button>
-                    </div>
-
-                    {expandedSources && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
-                            {report.sources.map((url, index) => (
-                                <a
-                                    key={index}
-                                    href={formatUrl(url)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-3 p-2 bg-white rounded border border-gray-200 text-sm hover:bg-gray-50 transition-colors"
-                                >
-                                    <img
-                                        src={getFaviconUrl(url)}
-                                        alt=""
-                                        className="w-4 h-4 flex-shrink-0"
-                                        onError={(e) => { e.target.style.display = 'none' }}
-                                    />
-                                    <span className="truncate flex-1 text-gray-700">{formatDomain(url)}</span>
-                                    <ExternalLink size={14} className="text-gray-400 flex-shrink-0" />
-                                </a>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
-
             {/* Main Content */}
             <div className="markdown-container">
                 {/* Render the first paragraph (summary) with full markdown */}

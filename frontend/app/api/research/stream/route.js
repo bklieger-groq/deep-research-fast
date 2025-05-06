@@ -108,44 +108,47 @@ function extractSearchUrls(executedTools) {
     return searchUrls;
 }
 
-// Add a test URL for development purposes
-function getDebugSourcesIfEmpty(sources) {
-    if (!sources || sources.length === 0) {
-        // Add test URLs for debugging
-        console.log("No sources found, adding test URLs for debugging");
-        return [
-            "https://example.com/test1",
-            "https://example.com/test2",
-            "https://example.com/test3"
-        ];
-    }
-    return sources;
-}
-
 // Generator function for the research process
 async function* researchProcessGenerator(query) {
     try {
+        // Track all research sources
+        const researchSources = [];
+
+        // Keep track of timing information
+        const timings = {
+            start: Date.now(),
+            steps: {}
+        };
+
         // Step 1: Generate Research questions
+        const stepStartTime = Date.now();
         yield encodeSSE(JSON.stringify({
             status: 'progress',
             step: 'follow_up_questions',
-            message: 'Generating Research questions...'
+            message: 'Generating Research questions...',
+            sources: researchSources
         }));
 
         const questions = await generateFollowUpQuestions(query);
 
-        // Track all research sources
-        const researchSources = [];
+        // Record timing for this step
+        timings.steps.follow_up_questions = {
+            duration: Date.now() - stepStartTime,
+            completed: Date.now()
+        };
 
         // List to store completed QA pairs
         const qaPairs = [];
 
         // Step 2: Start answering questions (before research data)
+        const answeringStartTime = Date.now();
         yield encodeSSE(JSON.stringify({
             status: 'progress',
             step: 'answering_questions',
             message: 'Starting to answer research questions...',
-            progress: 0
+            progress: 0,
+            timings: timings,
+            sources: researchSources
         }));
 
         // Process questions
@@ -182,24 +185,41 @@ async function* researchProcessGenerator(query) {
                 }
             }
 
+            // Update timing for questions answered so far
+            timings.steps.answering_questions = {
+                duration: Date.now() - answeringStartTime,
+                completed: Date.now(),
+                progress: completedQuestions / totalQuestions
+            };
+
             // Send progress update
             yield encodeSSE(JSON.stringify({
                 status: 'progress',
                 step: 'answering_questions',
                 message: `Answered question ${completedQuestions}/${totalQuestions}: ${result.question}`,
                 progress: completedQuestions / totalQuestions,
-                sources: researchSources
+                sources: researchSources,
+                timings: timings
             }));
         }
 
         // Step 3: Gather research data
+        const researchDataStartTime = Date.now();
         yield encodeSSE(JSON.stringify({
             status: 'progress',
             step: 'research_data',
-            message: 'Gathering additional research data...'
+            message: 'Gathering additional research data...',
+            sources: researchSources,
+            timings: timings
         }));
 
         const researchDataResult = await gatherResearchData(query, qaPairs);
+
+        // Record timing for this step
+        timings.steps.research_data = {
+            duration: Date.now() - researchDataStartTime,
+            completed: Date.now()
+        };
 
         const researchData = researchDataResult.content || researchDataResult;
 
@@ -224,14 +244,27 @@ async function* researchProcessGenerator(query) {
         }
 
         // Step 4: Generate the complete report
+        const reportStartTime = Date.now();
         yield encodeSSE(JSON.stringify({
             status: 'progress',
             step: 'final_report',
             message: 'Generating final report...',
-            sources: researchSources
+            sources: researchSources,
+            timings: timings
         }));
 
         const reportContent = await generateCompleteReport(query, qaPairs, researchData);
+
+        // Record timing for this step and total time
+        timings.steps.final_report = {
+            duration: Date.now() - reportStartTime,
+            completed: Date.now()
+        };
+
+        timings.total = {
+            duration: Date.now() - timings.start,
+            completed: Date.now()
+        };
 
         // Add Q&A section at the end of the report
         let qaSection = "\n\n## Questions and Detailed Answers\n\n";
@@ -245,7 +278,8 @@ async function* researchProcessGenerator(query) {
         yield encodeSSE(JSON.stringify({
             status: 'complete',
             report: finalReport,
-            sources: researchSources
+            sources: researchSources,
+            timings: timings
         }));
 
     } catch (error) {
