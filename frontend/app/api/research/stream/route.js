@@ -18,6 +18,110 @@ function encodeSSE(data, event = undefined) {
     return message + "\n\n";
 }
 
+// Helper function to extract URLs from search-type executed_tools
+function extractSearchUrls(executedTools) {
+    const searchUrls = [];
+
+    if (!executedTools || !Array.isArray(executedTools)) {
+        console.log("No executed tools found or not an array");
+        return searchUrls;
+    }
+
+    console.log("Processing executed tools:", JSON.stringify(executedTools));
+
+    for (const tool of executedTools) {
+        console.log("Tool:", JSON.stringify(tool));
+        console.log("Tool type:", tool.type);
+
+        if (tool.type === 'search') {
+            try {
+                // Extract URL from output if available
+                if (tool.output) {
+                    const outputString = typeof tool.output === 'string' ? tool.output : JSON.stringify(tool.output);
+                    console.log("Search tool output:", outputString);
+
+                    // Based on the example, each result has a Title, URL, Content, and Score pattern
+                    // Extract all URLs using this format
+                    const lines = outputString.split('\n');
+                    let currentUrl = null;
+
+                    for (const line of lines) {
+                        if (line.startsWith('URL: ')) {
+                            currentUrl = line.substring(5).trim();
+                            console.log("Found URL:", currentUrl);
+                            if (currentUrl && !searchUrls.includes(currentUrl)) {
+                                searchUrls.push(currentUrl);
+                            }
+                        }
+                    }
+
+                    // If no URLs found with direct parsing, try regex patterns
+                    if (searchUrls.length === 0) {
+                        // Match URL: pattern
+                        const urlRegex = /URL:\s*([^\n]+)/g;
+                        let match;
+
+                        while ((match = urlRegex.exec(outputString)) !== null) {
+                            const url = match[1].trim();
+                            console.log("Found URL via regex:", url);
+                            if (!searchUrls.includes(url) && url.length > 10) {
+                                searchUrls.push(url);
+                            }
+                        }
+                    }
+                }
+
+                // Also check the arguments field which may contain search query information
+                if (tool.arguments && searchUrls.length === 0) {
+                    console.log("Checking search tool arguments:", tool.arguments);
+                    let argsObj;
+
+                    try {
+                        // Arguments could be a string containing JSON
+                        if (typeof tool.arguments === 'string') {
+                            argsObj = JSON.parse(tool.arguments);
+                        } else {
+                            argsObj = tool.arguments;
+                        }
+
+                        // If we have a query in the arguments, add it as a source
+                        if (argsObj.query) {
+                            console.log("Found search query in arguments:", argsObj.query);
+                            // For search queries, we'll create a Google search URL
+                            const searchURL = `https://www.google.com/search?q=${encodeURIComponent(argsObj.query)}`;
+                            console.log("Adding search URL from query:", searchURL);
+                            if (!searchUrls.includes(searchURL)) {
+                                searchUrls.push(searchURL);
+                            }
+                        }
+                    } catch (argError) {
+                        console.error("Error parsing arguments:", argError);
+                    }
+                }
+            } catch (error) {
+                console.error('Error processing search tool:', error);
+            }
+        }
+    }
+
+    console.log("Final extracted URLs:", searchUrls);
+    return searchUrls;
+}
+
+// Add a test URL for development purposes
+function getDebugSourcesIfEmpty(sources) {
+    if (!sources || sources.length === 0) {
+        // Add test URLs for debugging
+        console.log("No sources found, adding test URLs for debugging");
+        return [
+            "https://example.com/test1",
+            "https://example.com/test2",
+            "https://example.com/test3"
+        ];
+    }
+    return sources;
+}
+
 // Generator function for the research process
 async function* researchProcessGenerator(query) {
     try {
@@ -29,6 +133,9 @@ async function* researchProcessGenerator(query) {
         }));
 
         const questions = await generateFollowUpQuestions(query);
+
+        // Track all research sources
+        const researchSources = [];
 
         // List to store completed QA pairs
         const qaPairs = [];
@@ -56,12 +163,32 @@ async function* researchProcessGenerator(query) {
             qaPairs.push({ question: result.question, answer: result.answer });
             completedQuestions += 1;
 
+            if (result.tool_results && result.tool_results.executed_tools) {
+                const newUrls = extractSearchUrls(result.tool_results.executed_tools);
+
+                // Add new URLs to research sources
+                for (const url of newUrls) {
+                    if (!researchSources.includes(url)) {
+                        researchSources.push(url);
+                    }
+                }
+
+                // Send sources update if we have new ones
+                if (newUrls.length > 0) {
+                    yield encodeSSE(JSON.stringify({
+                        status: 'sources_update',
+                        sources: researchSources
+                    }));
+                }
+            }
+
             // Send progress update
             yield encodeSSE(JSON.stringify({
                 status: 'progress',
                 step: 'answering_questions',
                 message: `Answered question ${completedQuestions}/${totalQuestions}: ${result.question}`,
-                progress: completedQuestions / totalQuestions
+                progress: completedQuestions / totalQuestions,
+                sources: researchSources
             }));
         }
 
@@ -72,13 +199,36 @@ async function* researchProcessGenerator(query) {
             message: 'Gathering additional research data...'
         }));
 
-        const researchData = await gatherResearchData(query, qaPairs);
+        const researchDataResult = await gatherResearchData(query, qaPairs);
+
+        const researchData = researchDataResult.content || researchDataResult;
+
+        // Extract URLs from research data tool results if available
+        if (researchDataResult.tool_results && researchDataResult.tool_results.executed_tools) {
+            const newUrls = extractSearchUrls(researchDataResult.tool_results.executed_tools);
+
+            // Add new URLs to research sources
+            for (const url of newUrls) {
+                if (!researchSources.includes(url)) {
+                    researchSources.push(url);
+                }
+            }
+
+            // Send sources update if we have new ones
+            if (newUrls.length > 0) {
+                yield encodeSSE(JSON.stringify({
+                    status: 'sources_update',
+                    sources: researchSources
+                }));
+            }
+        }
 
         // Step 4: Generate the complete report
         yield encodeSSE(JSON.stringify({
             status: 'progress',
             step: 'final_report',
-            message: 'Generating final report...'
+            message: 'Generating final report...',
+            sources: researchSources
         }));
 
         const reportContent = await generateCompleteReport(query, qaPairs, researchData);
@@ -94,7 +244,8 @@ async function* researchProcessGenerator(query) {
         // Return the final result
         yield encodeSSE(JSON.stringify({
             status: 'complete',
-            report: finalReport
+            report: finalReport,
+            sources: researchSources
         }));
 
     } catch (error) {
@@ -200,4 +351,4 @@ export async function GET(request) {
             { status: 500 }
         );
     }
-} 
+}

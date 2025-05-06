@@ -3,13 +3,14 @@
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { atomDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
-import { Download, Share, ChevronDown, ChevronUp } from 'lucide-react'
+import { Download, Share, ChevronDown, ChevronUp, Link, ExternalLink, Book } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 export default function ResearchReport({ report }) {
     // Keep track of all expanded sections in an array
     const [expandedSections, setExpandedSections] = useState([])
     const [showQA, setShowQA] = useState(true)
+    const [expandedSources, setExpandedSources] = useState(false)
 
     if (!report || !report.report) {
         return null
@@ -137,6 +138,48 @@ export default function ResearchReport({ report }) {
         }
     }
 
+    // Function to format domain from URL and ensure URL is properly formatted
+    const formatDomain = (url) => {
+        try {
+            // Check if URL has protocol, if not add https://
+            let formattedUrl = url;
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                formattedUrl = 'https://' + url;
+            }
+            const domain = new URL(formattedUrl).hostname.replace('www.', '')
+            return domain
+        } catch (error) {
+            console.log("Error formatting URL:", url, error);
+            // If URL parsing fails, just return the original string
+            return url
+        }
+    }
+
+    // Function to ensure URL is properly formatted for href
+    const formatUrl = (url) => {
+        try {
+            // Check if URL has protocol, if not add https://
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                return 'https://' + url;
+            }
+            return url;
+        } catch (error) {
+            console.log("Error formatting URL for href:", url, error);
+            return url;
+        }
+    }
+
+    // Function to get favicon URL
+    const getFaviconUrl = (url) => {
+        try {
+            const domain = formatDomain(url);
+            return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+        } catch (error) {
+            console.log("Error getting favicon:", url, error);
+            return '';
+        }
+    }
+
     return (
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
             {/* Report Header */}
@@ -162,6 +205,47 @@ export default function ResearchReport({ report }) {
                     </button>
                 </div>
             </div>
+
+            {/* Research Sources Section */}
+            {report.sources && report.sources.length > 0 && (
+                <div className="mb-6 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2 text-gray-700">
+                            <Book size={18} />
+                            <h3 className="font-medium">Works Consulted ({report.sources.length})</h3>
+                        </div>
+                        <button
+                            onClick={() => setExpandedSources(!expandedSources)}
+                            className="text-gray-500 hover:text-gray-700"
+                        >
+                            {expandedSources ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
+                    </div>
+
+                    {expandedSources && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                            {report.sources.map((url, index) => (
+                                <a
+                                    key={index}
+                                    href={formatUrl(url)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-3 p-2 bg-white rounded border border-gray-200 text-sm hover:bg-gray-50 transition-colors"
+                                >
+                                    <img
+                                        src={getFaviconUrl(url)}
+                                        alt=""
+                                        className="w-4 h-4 flex-shrink-0"
+                                        onError={(e) => { e.target.style.display = 'none' }}
+                                    />
+                                    <span className="truncate flex-1 text-gray-700">{formatDomain(url)}</span>
+                                    <ExternalLink size={14} className="text-gray-400 flex-shrink-0" />
+                                </a>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Main Content */}
             <div className="markdown-container">

@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Brain, FileQuestion, BookOpen, FileText, CheckCircle, AlertCircle } from 'lucide-react'
+import { Brain, FileQuestion, BookOpen, FileText, CheckCircle, AlertCircle, Link, ExternalLink, Book, ChevronUp, ChevronDown } from 'lucide-react'
 
 export default function ResearchProgress({ status, query }) {
     const [progress, setProgress] = useState(0)
+    const [sources, setSources] = useState([])
 
     useEffect(() => {
         if (status.progress) {
@@ -12,20 +13,36 @@ export default function ResearchProgress({ status, query }) {
         } else if (status.status === 'complete') {
             setProgress(100)
         }
+
+        // Update sources when they are available
+        if (status.sources && Array.isArray(status.sources)) {
+            console.log("Sources found in status:", status.sources);
+            setSources(status.sources)
+        } else if (status.status === 'sources_update' && status.sources) {
+            console.log("Sources found in sources_update:", status.sources);
+            setSources(status.sources)
+        } else {
+            console.log("No sources found in status:", status);
+        }
     }, [status])
+
+    // Debug: Log current sources state
+    useEffect(() => {
+        console.log("Current sources state:", sources);
+    }, [sources])
 
     const getStepIcon = (step) => {
         switch (step) {
             case 'follow_up_questions':
-                return <FileQuestion className="text-primary-600" size={24} />
+                return <FileQuestion className="text-blue-500" size={24} strokeWidth={1.5} />
             case 'research_data':
-                return <BookOpen className="text-primary-600" size={24} />
+                return <BookOpen className="text-blue-500" size={24} strokeWidth={1.5} />
             case 'answering_questions':
-                return <Brain className="text-primary-600" size={24} />
+                return <Brain className="text-blue-500" size={24} strokeWidth={1.5} />
             case 'final_report':
-                return <FileText className="text-primary-600" size={24} />
+                return <FileText className="text-blue-500" size={24} strokeWidth={1.5} />
             default:
-                return <Brain className="text-primary-600" size={24} />
+                return <Brain className="text-blue-500" size={24} strokeWidth={1.5} />
         }
     }
 
@@ -81,7 +98,7 @@ export default function ResearchProgress({ status, query }) {
             </div>
 
             <div className="mb-6 flex items-center gap-3">
-                {getStepIcon(status.step)}
+                <div className="ml-3">{getStepIcon(status.step)}</div>
                 <div className="flex-1">
                     <p className="font-medium">{status.message || 'Processing your research query...'}</p>
                     {status.step === 'answering_questions' && (
@@ -123,6 +140,11 @@ export default function ResearchProgress({ status, query }) {
                     {...getStepStatus('final_report')}
                 />
             </div>
+
+            {/* Research Sources Section */}
+            {sources.length > 0 && (
+                <ResearchSources sources={sources} />
+            )}
 
             <div className="mt-6 text-center text-sm text-gray-500">
                 {status.status === 'complete'
@@ -166,6 +188,113 @@ function ProgressStage({ title, isActive, isDone, progress }) {
                     </div>
                 )}
             </div>
+        </div>
+    )
+}
+
+function ResearchSources({ sources }) {
+    const [expanded, setExpanded] = useState(false)
+    const displayCount = expanded ? sources.length : Math.min(3, sources.length)
+
+    console.log("ResearchSources component received sources:", sources);
+
+    // Function to format domain from URL and ensure URL is properly formatted
+    const formatDomain = (url) => {
+        try {
+            // Check if URL has protocol, if not add https://
+            let formattedUrl = url;
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                formattedUrl = 'https://' + url;
+            }
+            const domain = new URL(formattedUrl).hostname.replace('www.', '')
+            return domain
+        } catch (error) {
+            console.log("Error formatting URL:", url, error);
+            // If URL parsing fails, just return the original string
+            return url
+        }
+    }
+
+    // Function to ensure URL is properly formatted for href
+    const formatUrl = (url) => {
+        try {
+            // Check if URL has protocol, if not add https://
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                return 'https://' + url;
+            }
+            return url;
+        } catch (error) {
+            console.log("Error formatting URL for href:", url, error);
+            return url;
+        }
+    }
+
+    // Function to get favicon URL
+    const getFaviconUrl = (url) => {
+        try {
+            const domain = formatDomain(url);
+            return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+        } catch (error) {
+            console.log("Error getting favicon:", url, error);
+            return '';
+        }
+    }
+
+    return (
+        <div className="mt-6 bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2 text-gray-700">
+                    <Book size={18} />
+                    <h3 className="font-medium">Works Consulted ({sources.length})</h3>
+                </div>
+                {sources.length > 3 && (
+                    <button
+                        onClick={() => setExpanded(!expanded)}
+                        className="text-gray-500 hover:text-gray-700"
+                    >
+                        {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                )}
+            </div>
+
+            <div className="space-y-2">
+                {sources.slice(0, displayCount).map((url, index) => (
+                    <a
+                        key={index}
+                        href={formatUrl(url)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-2 bg-white rounded border border-gray-200 text-sm hover:bg-gray-50 transition-colors"
+                    >
+                        <img
+                            src={getFaviconUrl(url)}
+                            alt=""
+                            className="w-4 h-4 flex-shrink-0"
+                            onError={(e) => { e.target.style.display = 'none' }}
+                        />
+                        <span className="truncate flex-1 text-gray-700">{formatDomain(url)}</span>
+                        <ExternalLink size={14} className="text-gray-400 flex-shrink-0" />
+                    </a>
+                ))}
+            </div>
+
+            {sources.length > 3 && expanded === false && (
+                <button
+                    onClick={() => setExpanded(true)}
+                    className="mt-2 text-sm text-gray-600 hover:text-gray-800 font-medium"
+                >
+                    Show {sources.length - 3} more sources
+                </button>
+            )}
+
+            {expanded && sources.length > 3 && (
+                <button
+                    onClick={() => setExpanded(false)}
+                    className="mt-2 text-sm text-gray-600 hover:text-gray-800 font-medium"
+                >
+                    Show less
+                </button>
+            )}
         </div>
     )
 } 

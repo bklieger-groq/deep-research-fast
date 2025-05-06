@@ -78,19 +78,38 @@ export default function Home() {
                     if (dataMatch && dataMatch[1]) {
                         try {
                             const data = JSON.parse(dataMatch[1]);
-                            console.log("Received update:", data);
+                            console.log("SSE Event received:", data);
+
+                            // Check for sources explicitly
+                            if (data.sources) {
+                                console.log("Sources found in SSE data:", data.sources);
+                            }
 
                             if (data.status === 'progress') {
                                 setProgressStatus(data);
+                            } else if (data.status === 'sources_update') {
+                                // Update the progress status with the new sources
+                                // but preserve the current step and message
+                                console.log("Processing sources_update event:", data.sources);
+                                setProgressStatus(prevStatus => {
+                                    const newStatus = {
+                                        ...prevStatus,
+                                        sources: data.sources
+                                    };
+                                    console.log("Updated progress status with sources:", newStatus);
+                                    return newStatus;
+                                });
                             } else if (data.status === 'complete') {
                                 // Update progress to complete but don't set isResearching to false
                                 // This ensures the progress component stays visible
-                                setProgressStatus({
+                                const completeStatus = {
                                     ...data,
                                     status: 'complete',
                                     step: 'final_report',
                                     message: 'Report generation complete!'
-                                });
+                                };
+                                console.log("Setting complete status:", completeStatus);
+                                setProgressStatus(completeStatus);
                                 setReport(data);
                             } else if (data.status === 'error') {
                                 setError(data.message);
