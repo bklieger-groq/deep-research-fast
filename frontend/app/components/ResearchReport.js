@@ -3,14 +3,12 @@
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { atomDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
-import { Download, Share, ChevronDown, ChevronUp, Link, ExternalLink, Book } from 'lucide-react'
+import { Download, Share, ChevronDown, ChevronUp } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 export default function ResearchReport({ report }) {
     // Keep track of all expanded sections in an array
     const [expandedSections, setExpandedSections] = useState([])
-    const [showQA, setShowQA] = useState(true)
-    const [expandedSources, setExpandedSources] = useState(false)
     const [showShareMessage, setShowShareMessage] = useState(false)
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
 
@@ -105,19 +103,9 @@ export default function ResearchReport({ report }) {
 
             // Get the title for the filename
             const title = report.report.split('\n')[0].replace('# ', '') || 'research';
-            const filename = `research-report-${title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.pdf`;
 
-            // Create a simple text-to-pdf fallback approach that works in browsers
-            // Use the print dialog
-            const printWindow = window.open('', '_blank');
-
-            if (!printWindow) {
-                alert('Please allow popups for PDF generation');
-                setIsGeneratingPDF(false);
-                return;
-            }
-
-            printWindow.document.write(`
+            // Create a data URL with the HTML content
+            const htmlContent = `
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -138,32 +126,47 @@ export default function ResearchReport({ report }) {
                             body { padding: 0; }
                         }
                     </style>
+                    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
                 </head>
                 <body class="markdown-body">
                     <div id="content"></div>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            document.getElementById('content').innerHTML = marked.parse(${JSON.stringify(report.report)});
+                            setTimeout(() => {
+                                window.print();
+                                window.onafterprint = function() {
+                                    window.close();
+                                };
+                            }, 1000);
+                        });
+                    </script>
                 </body>
                 </html>
-            `);
+            `;
 
-            printWindow.document.close();
+            // Create a blob with the HTML content
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
 
-            // Add script for marked
-            const script = printWindow.document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
-            script.onload = function () {
-                const contentDiv = printWindow.document.getElementById('content');
-                contentDiv.innerHTML = printWindow.marked.parse(report.report);
+            // Open a new window with the blob URL
+            const printWindow = window.open(url, '_blank');
 
-                setTimeout(() => {
-                    printWindow.print();
-                    printWindow.onafterprint = function () {
-                        printWindow.close();
-                        setIsGeneratingPDF(false);
-                    };
-                }, 1000);
-            };
+            if (!printWindow) {
+                alert('Please allow popups for PDF generation');
+                setIsGeneratingPDF(false);
+                URL.revokeObjectURL(url);
+                return;
+            }
 
-            printWindow.document.head.appendChild(script);
+            // Set up a listener to clean up resources when the window is closed
+            const checkWindowClosed = setInterval(() => {
+                if (printWindow.closed) {
+                    clearInterval(checkWindowClosed);
+                    URL.revokeObjectURL(url);
+                    setIsGeneratingPDF(false);
+                }
+            }, 1000);
 
         } catch (error) {
             console.error('Error generating PDF:', error);
