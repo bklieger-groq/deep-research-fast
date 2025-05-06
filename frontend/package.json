@@ -1,0 +1,37 @@
+{
+  "name": "research-assistant-frontend",
+  "version": "1.0.0",
+  "description": "A beautiful UI for the Research Assistant with NextJS",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "keywords": [
+    "research",
+    "ai",
+    "compound",
+    "llama",
+    "maverick",
+    "groq"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@headlessui/react": "^1.7.17",
+    "@heroicons/react": "^2.0.18",
+    "@tailwindcss/postcss": "^4.1.5",
+    "autoprefixer": "^10.4.16",
+    "daisyui": "^4.4.2",
+    "lucide-react": "^0.294.0",
+    "next": "^14.0.3",
+    "nprogress": "^0.2.0",
+    "postcss": "^8.4.31",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-markdown": "^9.0.1",
+    "react-syntax-highlighter": "^15.5.0",
+    "tailwindcss": "^3.3.5"
+  }
+}

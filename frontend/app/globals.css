@@ -1,0 +1,102 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+html,
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #FAFAFA;
+}
+
+/* Markdown Styling */
+.markdown {
+    @apply text-gray-800 leading-relaxed;
+}
+
+.markdown h1 {
+    @apply text-3xl font-bold my-6;
+}
+
+.markdown h2 {
+    @apply text-2xl font-semibold my-5;
+}
+
+.markdown h3 {
+    @apply text-xl font-medium my-4;
+}
+
+.markdown p {
+    @apply my-3;
+}
+
+.markdown ul {
+    @apply list-disc pl-8 my-4;
+}
+
+.markdown ol {
+    @apply list-decimal pl-8 my-4;
+}
+
+.markdown a {
+    @apply text-primary-600 hover:underline;
+}
+
+.markdown blockquote {
+    @apply border-l-4 border-primary-300 pl-4 py-1 my-4 italic;
+}
+
+.markdown code {
+    @apply bg-gray-100 px-1 py-0.5 rounded text-sm;
+}
+
+.markdown pre {
+    @apply bg-gray-100 p-4 rounded-lg my-4 overflow-x-auto;
+}
+
+/* Progress Bar Animation */
+.progress-bar {
+    @apply h-4 relative overflow-hidden rounded-full bg-primary-100;
+}
+
+.progress-bar:before {
+    content: '';
+    @apply absolute top-0 bottom-0 left-0 bg-primary-600 rounded-full transition-all duration-300 ease-in-out;
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Page transitions */
+.page-transition-enter {
+    opacity: 0;
+}
+
+.page-transition-enter-active {
+    opacity: 1;
+    transition: opacity 300ms;
+}
+
+.page-transition-exit {
+    opacity: 1;
+}
+
+.page-transition-exit-active {
+    opacity: 0;
+    transition: opacity 300ms;
+}
