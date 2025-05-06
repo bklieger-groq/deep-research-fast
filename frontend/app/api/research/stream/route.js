@@ -4,7 +4,7 @@ import {
     gatherResearchData,
     generateCompleteReport,
     formatSSE
-} from '../../../app/lib/research';
+} from '@/lib/research';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';

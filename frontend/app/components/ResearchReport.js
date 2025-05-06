@@ -98,10 +98,8 @@ export default function ResearchReport({ report }) {
     }
 
     const handleDownload = () => {
-        if (!report.file_path) return
-
         const link = document.createElement('a')
-        const filename = report.file_path.split('/').pop()
+        const filename = `research-report-${title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.md`
 
         // Create a blob from the markdown content
         const blob = new Blob([report.report], { type: 'text/markdown' })
