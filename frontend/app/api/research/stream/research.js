@@ -2,18 +2,6 @@ import Groq from 'groq-sdk';
 import 'dotenv/config';
 import path from 'path';
 
-// Server-side only imports
-let fs = { existsSync: () => true, mkdirSync: () => { } };
-if (typeof window === 'undefined') {
-    // We're on the server
-    fs = require('fs');
-
-    // Create .groq directory if it doesn't exist
-    if (!fs.existsSync('.groq')) {
-        fs.mkdirSync('.groq', { recursive: true });
-    }
-}
-
 // Configure API keys
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const client = new Groq({
