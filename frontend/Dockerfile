@@ -17,8 +17,8 @@ COPY . .
 # Next.js collects completely anonymous telemetry data
 ENV NEXT_TELEMETRY_DISABLED 1
 
-# Add the additional tailwind plugin
-RUN npm install @tailwindcss/postcss
+# Ensure the required dependencies are installed
+RUN npm install groq dotenv
 
 RUN npm run build
 
@@ -50,4 +50,5 @@ ENV PORT 3000
 # set hostname to localhost
 ENV HOSTNAME "0.0.0.0"
 
+# Make sure GROQ_API_KEY is passed as an environment variable when running the container
 CMD ["node", "server.js"] 
