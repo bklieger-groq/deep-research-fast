@@ -4,7 +4,7 @@ import {
     gatherResearchData,
     generateCompleteReport,
     formatSSE
-} from '@/lib/research';
+} from './research';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -23,22 +23,15 @@ function extractSearchUrls(executedTools) {
     const searchUrls = [];
 
     if (!executedTools || !Array.isArray(executedTools)) {
-        console.log("No executed tools found or not an array");
         return searchUrls;
     }
 
-    console.log("Processing executed tools:", JSON.stringify(executedTools));
-
     for (const tool of executedTools) {
-        console.log("Tool:", JSON.stringify(tool));
-        console.log("Tool type:", tool.type);
-
         if (tool.type === 'search') {
             try {
                 // Extract URL from output if available
                 if (tool.output) {
                     const outputString = typeof tool.output === 'string' ? tool.output : JSON.stringify(tool.output);
-                    console.log("Search tool output:", outputString);
 
                     // Based on the example, each result has a Title, URL, Content, and Score pattern
                     // Extract all URLs using this format
@@ -48,7 +41,6 @@ function extractSearchUrls(executedTools) {
                     for (const line of lines) {
                         if (line.startsWith('URL: ')) {
                             currentUrl = line.substring(5).trim();
-                            console.log("Found URL:", currentUrl);
                             if (currentUrl && !searchUrls.includes(currentUrl)) {
                                 searchUrls.push(currentUrl);
                             }
@@ -63,7 +55,6 @@ function extractSearchUrls(executedTools) {
 
                         while ((match = urlRegex.exec(outputString)) !== null) {
                             const url = match[1].trim();
-                            console.log("Found URL via regex:", url);
                             if (!searchUrls.includes(url) && url.length > 10) {
                                 searchUrls.push(url);
                             }
@@ -73,7 +64,6 @@ function extractSearchUrls(executedTools) {
 
                 // Also check the arguments field which may contain search query information
                 if (tool.arguments && searchUrls.length === 0) {
-                    console.log("Checking search tool arguments:", tool.arguments);
                     let argsObj;
 
                     try {
@@ -86,10 +76,8 @@ function extractSearchUrls(executedTools) {
 
                         // If we have a query in the arguments, add it as a source
                         if (argsObj.query) {
-                            console.log("Found search query in arguments:", argsObj.query);
                             // For search queries, we'll create a Google search URL
                             const searchURL = `https://www.google.com/search?q=${encodeURIComponent(argsObj.query)}`;
-                            console.log("Adding search URL from query:", searchURL);
                             if (!searchUrls.includes(searchURL)) {
                                 searchUrls.push(searchURL);
                             }
@@ -104,7 +92,6 @@ function extractSearchUrls(executedTools) {
         }
     }
 
-    console.log("Final extracted URLs:", searchUrls);
     return searchUrls;
 }
 
