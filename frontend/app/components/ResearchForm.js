@@ -41,7 +41,7 @@ export default function ResearchForm({ onSubmit }) {
                     </button>
 
                     <div className="text-gray-500 text-sm">
-                        This process may take several minutes. Just kidding, its powered by Groq. Expect results in ~10-20 seconds.
+                        This process may take several minutes. Just kidding, its powered by Groq. Expect results in ~10-15 seconds.
                     </div>
                 </div>
             </form>

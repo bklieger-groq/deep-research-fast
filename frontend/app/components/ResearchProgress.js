@@ -70,7 +70,7 @@ export default function ResearchProgress({ status, query }) {
     };
 
     // Define the correct step order and get step progress
-    const stepOrder = ['follow_up_questions', 'answering_questions', 'research_data', 'final_report'];
+    const stepOrder = ['follow_up_questions', 'answering_questions', 'final_report'];
 
     const getStepStatus = (stepName) => {
         if (status.status === 'complete') {
@@ -135,26 +135,20 @@ export default function ResearchProgress({ status, query }) {
             <div className="space-y-3">
                 {/* Follow the correct step order for display */}
                 <ProgressStage
-                    title="Generating Research Questions"
+                    title="Stage 1: Generating Research Plan"
                     {...getStepStatus('follow_up_questions')}
                     timing={status.timings?.steps?.follow_up_questions}
                 />
 
                 <ProgressStage
-                    title="Answering Research Questions"
+                    title="Stage 2: Conducting Research (Compound-beta)"
                     {...getStepStatus('answering_questions')}
                     progress={status.step === 'answering_questions' ? progress : 0}
                     timing={status.timings?.steps?.answering_questions}
                 />
 
                 <ProgressStage
-                    title="Gathering Additional Research Data"
-                    {...getStepStatus('research_data')}
-                    timing={status.timings?.steps?.research_data}
-                />
-
-                <ProgressStage
-                    title="Compiling Final Report"
+                    title="Stage 3: Compiling Final Report"
                     {...getStepStatus('final_report')}
                     timing={status.timings?.steps?.final_report}
                 />
@@ -168,7 +162,7 @@ export default function ResearchProgress({ status, query }) {
             <div className="mt-6 text-center text-sm text-gray-500">
                 {status.status === 'complete'
                     ? <p>Report generation complete! You can view the results below.</p>
-                    : <p>This process may take several minutes. Just kidding, its powered by Groq. Expect results in ~10-20 seconds.</p>
+                    : <p>This process may take several minutes. Just kidding, its powered by Groq. Expect results in ~10-15 seconds.</p>
                 }
             </div>
         </div>

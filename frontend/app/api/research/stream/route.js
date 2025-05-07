@@ -1,7 +1,6 @@
 import {
     generateFollowUpQuestions,
     answerQuestion,
-    gatherResearchData,
     generateCompleteReport,
     formatSSE
 } from './research';
@@ -112,7 +111,7 @@ async function* researchProcessGenerator(query) {
         yield encodeSSE(JSON.stringify({
             status: 'progress',
             step: 'follow_up_questions',
-            message: 'Generating Research questions...',
+            message: 'Generating Research plan...',
             sources: researchSources
         }));
 
@@ -132,7 +131,7 @@ async function* researchProcessGenerator(query) {
         yield encodeSSE(JSON.stringify({
             status: 'progress',
             step: 'answering_questions',
-            message: 'Starting to answer research questions...',
+            message: 'Conducting research with compound-beta\'s search...',
             progress: 0,
             timings: timings,
             sources: researchSources
@@ -190,47 +189,7 @@ async function* researchProcessGenerator(query) {
             }));
         }
 
-        // Step 3: Gather research data
-        const researchDataStartTime = Date.now();
-        yield encodeSSE(JSON.stringify({
-            status: 'progress',
-            step: 'research_data',
-            message: 'Gathering additional research data...',
-            sources: researchSources,
-            timings: timings
-        }));
-
-        const researchDataResult = await gatherResearchData(query, qaPairs);
-
-        // Record timing for this step
-        timings.steps.research_data = {
-            duration: Date.now() - researchDataStartTime,
-            completed: Date.now()
-        };
-
-        const researchData = researchDataResult.content || researchDataResult;
-
-        // Extract URLs from research data tool results if available
-        if (researchDataResult.tool_results && researchDataResult.tool_results.executed_tools) {
-            const newUrls = extractSearchUrls(researchDataResult.tool_results.executed_tools);
-
-            // Add new URLs to research sources
-            for (const url of newUrls) {
-                if (!researchSources.includes(url)) {
-                    researchSources.push(url);
-                }
-            }
-
-            // Send sources update if we have new ones
-            if (newUrls.length > 0) {
-                yield encodeSSE(JSON.stringify({
-                    status: 'sources_update',
-                    sources: researchSources
-                }));
-            }
-        }
-
-        // Step 4: Generate the complete report
+        // Step 3: Generate the complete report
         const reportStartTime = Date.now();
         yield encodeSSE(JSON.stringify({
             status: 'progress',
@@ -240,7 +199,7 @@ async function* researchProcessGenerator(query) {
             timings: timings
         }));
 
-        const reportContent = await generateCompleteReport(query, qaPairs, researchData);
+        const reportContent = await generateCompleteReport(query, qaPairs, []);
 
         // Record timing for this step and total time
         timings.steps.final_report = {

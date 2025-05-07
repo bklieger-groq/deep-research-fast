@@ -10,7 +10,6 @@ const client = new Groq({
 
 // Constants
 const LLAMA_MODEL = "meta-llama/llama-4-maverick-17b-128e-instruct";
-const LLAMA_MODEL_MINI = "meta-llama/llama-4-scout-17b-16e-instruct";
 const COMPOUND_MODEL = "compound-beta";
 const COMPOUND_MODEL_MINI = "compound-beta-mini";
 
@@ -18,9 +17,10 @@ export async function generateFollowUpQuestions(query) {
     /**
      * Generate 3 Research questions using Llama-4-Maverick model
      */
-    const prompt = `Based on the following research query, generate 3 specific Research questions 
-  that would help gather more comprehensive information for compound research.
+    const prompt = `Based on the following research query, generate 3 specific research questions 
+  that would help gather comprehensive information that would fully answer this question.
   The questions should explore different aspects of the topic and help elicit detailed information.
+  Ensure the questions in their totality would fully answer the research query and are a little broad.
   
   Research Query: ${query}
   
@@ -183,7 +183,10 @@ Research Questions and Answers:
         context += `Q${i + 1}: ${qaPairs[i].question}\nA${i + 1}: ${qaPairs[i].answer}\n\n`;
     }
 
-    context += `\nResearch Data:\n${researchData}\n\n`;
+    // Only add research data if it exists and is not empty
+    if (researchData && typeof researchData === 'string' && researchData.trim().length > 0) {
+        context += `\nResearch Data:\n${researchData}\n\n`;
+    }
 
     const prompt = `You are tasked with writing a comprehensive research report based on the provided information.
   
@@ -199,7 +202,7 @@ Research Questions and Answers:
   Requirements:
   - Structure each section with appropriate headers using markdown (# for title, ## for major sections, ### for subsections)
   - Include factual information with HYPERLINKED CITATIONS using markdown format: [Source Name](URL)
-  - Integrate information from both the Research questions/answers and the research data
+  - Integrate information from the Research questions/answers
   - Provide your own analysis and insights in addition to the facts
   - Use academic, professional language throughout
   - Each section should have substantial content (3-4 paragraphs)
