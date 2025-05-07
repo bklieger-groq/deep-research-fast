@@ -78,10 +78,16 @@ export default function Home() {
                     if (dataMatch && dataMatch[1]) {
                         try {
                             const data = JSON.parse(dataMatch[1]);
-                            console.log("Received update:", data);
 
                             if (data.status === 'progress') {
                                 setProgressStatus(data);
+                            } else if (data.status === 'sources_update') {
+                                // Update the progress status with the new sources
+                                // but preserve the current step and message
+                                setProgressStatus(prevStatus => ({
+                                    ...prevStatus,
+                                    sources: data.sources
+                                }));
                             } else if (data.status === 'complete') {
                                 // Update progress to complete but don't set isResearching to false
                                 // This ensures the progress component stays visible

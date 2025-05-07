@@ -34,38 +34,38 @@ export default function ResearchForm({ onSubmit }) {
                     <button
                         type="submit"
                         disabled={!query.trim()}
-                        className="btn btn-primary px-6 py-3 flex items-center gap-2"
+                        className="btn btn-primary px-6 py-3 flex items-center gap-2 text-white"
                     >
                         <Search size={18} />
                         Start Research
                     </button>
 
                     <div className="text-gray-500 text-sm">
-                        This process may take a fast moment to generate a comprehensive report
+                        This process may take several minutes. Just kidding, its powered by Groq. Expect results in ~10-15 seconds.
                     </div>
                 </div>
             </form>
 
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <ExampleCard
-                    title="Historical Events"
+                    title="Current Events"
+                    description="What are the major news stories in the United States this week? Identify themes from specific events."
+                    onClick={() => {
+                        setQuery("What are the major news stories in the United States this week? Identify themes from specific events.")
+                    }}
+                />
+                <ExampleCard
+                    title="Technology Documentation"
+                    description="How can I build and deploy a web application using Groq API? Provide a step-by-step guide with code examples."
+                    onClick={() => {
+                        setQuery("How can I build and deploy a web application using Groq API? Provide a step-by-step guide with code examples.")
+                    }}
+                />
+                <ExampleCard
+                    title="Cited Historical Research"
                     description="What factors led to the fall of the Roman Empire and what lessons can be drawn for modern societies?"
                     onClick={() => {
-                        setQuery("What factors led to the fall of the Roman Empire and what lessons can be drawn for modern societies?")
-                    }}
-                />
-                <ExampleCard
-                    title="Scientific Research"
-                    description="What are the latest developments in quantum computing and how might they impact data security?"
-                    onClick={() => {
-                        setQuery("What are the latest developments in quantum computing and how might they impact data security?")
-                    }}
-                />
-                <ExampleCard
-                    title="Business Analysis"
-                    description="How have supply chain challenges impacted global business strategies in the last two years?"
-                    onClick={() => {
-                        setQuery("How have supply chain challenges impacted global business strategies in the last two years?")
+                        setQuery("What are the major political and economic news stories in the United States this week and their potential impacts?")
                     }}
                 />
             </div>

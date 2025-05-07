@@ -48,11 +48,13 @@ body {
 }
 
 .markdown code {
-    @apply bg-gray-100 px-1 py-0.5 rounded text-sm;
+    @apply px-1 py-0.5 rounded text-sm;
+    background-color: transparent;
 }
 
 .markdown pre {
-    @apply bg-gray-100 p-4 rounded-lg my-4 overflow-x-auto;
+    @apply p-4 rounded-lg my-4 overflow-x-auto;
+    background-color: transparent;
 }
 
 /* Progress Bar Animation */

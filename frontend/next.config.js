@@ -27,6 +27,10 @@ const nextConfig = {
             },
         ];
     },
+    // Configure webpack to resolve path aliases
+    webpack(config) {
+        return config;
+    }
 }
 
 module.exports = nextConfig
