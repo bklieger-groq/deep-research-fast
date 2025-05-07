@@ -6,6 +6,7 @@ import { atomDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 import { Download, Share, ChevronDown, ChevronUp } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
+
 export default function ResearchReport({ report }) {
     // Keep track of all expanded sections in an array
     const [expandedSections, setExpandedSections] = useState([])
@@ -339,6 +340,7 @@ export default function ResearchReport({ report }) {
                                                 style={atomDark}
                                                 language={match[1]}
                                                 PreTag="div"
+                                                customStyle={{ backgroundColor: '#2d2d2d' }}
                                                 {...props}
                                             />
                                         ) : (

@@ -49,9 +49,9 @@ export default function ResearchForm({ onSubmit }) {
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <ExampleCard
                     title="Current Events"
-                    description="What are the major news stories in the United States this week and their potential impacts?"
+                    description="What are the major news stories in the United States this week? Identify themes from specific events."
                     onClick={() => {
-                        setQuery("What are the major news stories in the United States this week and their potential impacts?")
+                        setQuery("What are the major news stories in the United States this week? Identify themes from specific events.")
                     }}
                 />
                 <ExampleCard
