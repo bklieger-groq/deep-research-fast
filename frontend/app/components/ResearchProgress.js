@@ -40,26 +40,26 @@ export default function ResearchProgress({ status, query }) {
     const getStepIcon = (step) => {
         switch (step) {
             case 'follow_up_questions':
-                return <FileQuestion className="text-blue-500" size={24} strokeWidth={1.5} />
+                return <FileQuestion className="text-grey-500" size={24} strokeWidth={1.5} />
             case 'research_data':
-                return <BookOpen className="text-blue-500" size={24} strokeWidth={1.5} />
+                return <BookOpen className="text-grey-500" size={24} strokeWidth={1.5} />
             case 'answering_questions':
-                return <Brain className="text-blue-500" size={24} strokeWidth={1.5} />
+                return <Brain className="text-grey-500" size={24} strokeWidth={1.5} />
             case 'final_report':
-                return <FileText className="text-blue-500" size={24} strokeWidth={1.5} />
+                return <FileText className="text-grey-500" size={24} strokeWidth={1.5} />
             default:
-                return <Brain className="text-blue-500" size={24} strokeWidth={1.5} />
+                return <Brain className="text-grey-500" size={24} strokeWidth={1.5} />
         }
     }
 
     const getProgressColor = () => {
         if (status.status === 'error') return 'bg-red-500'
         if (status.status === 'complete') return 'bg-green-500'
-        return 'bg-primary-600'
+        return 'bg-[#4ba8d1]'
     }
 
     const getStatusTitle = () => {
-        if (status.status === 'complete') return 'Research Complete'
+        if (status.status === 'complete') return 'Research Completed'
         return 'Research in Progress'
     }
 
@@ -96,9 +96,9 @@ export default function ResearchProgress({ status, query }) {
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 max-w-3xl mx-auto">
+        <div className="bg-white rounded-xl border border-gray-200 p-6 max-w-3xl mx-auto">
             <div className="text-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-2">{getStatusTitle()}</h2>
+                <h2 className="text-xl text-gray-800 mb-2">{getStatusTitle()}</h2>
                 <p className="text-gray-600">{query}</p>
                 {totalDuration && (
                     <p className="text-gray-500 text-sm mt-1">Total time: {formatDuration(totalDuration)}</p>
@@ -115,7 +115,7 @@ export default function ResearchProgress({ status, query }) {
             <div className="mb-6 flex items-center gap-3">
                 <div className="ml-3">{getStepIcon(status.step)}</div>
                 <div className="flex-1">
-                    <p className="font-medium">{status.message || 'Processing your research query...'}</p>
+                    <p>{status.message || 'Processing your research query...'}</p>
                     {status.step === 'answering_questions' && (
                         <div className="mt-1 text-sm text-gray-500">
                             {Math.round(progress)}% complete
@@ -177,12 +177,12 @@ function ProgressStage({ title, isActive, isDone, progress, timing }) {
     };
 
     return (
-        <div className={`flex items-center gap-3 p-3 rounded-lg border ${isActive ? 'border-primary-300 bg-primary-50' :
+        <div className={`flex items-center gap-3 p-3 rounded-lg border ${isActive ? 'border-[#4ba8d1] bg-[#4ba8d1]/5' :
             isDone ? 'border-green-200 bg-green-50' :
                 'border-gray-200'
             }`}>
             <div className={`w-6 h-6 flex items-center justify-center rounded-full ${isDone ? 'bg-green-500 text-white' :
-                isActive ? 'bg-primary-500 text-white' :
+                isActive ? 'bg-[#4ba8d1] text-white' :
                     'bg-gray-200 text-gray-500'
                 }`}>
                 {isDone ? (
@@ -194,8 +194,8 @@ function ProgressStage({ title, isActive, isDone, progress, timing }) {
 
             <div className="flex-1">
                 <div className="flex justify-between items-center">
-                    <p className={`font-medium ${isDone ? 'text-green-700' :
-                        isActive ? 'text-primary-700' :
+                    <p className={`${isDone ? 'text-green-700' :
+                        isActive ? 'text-[#4ba8d1]' :
                             'text-gray-500'
                         }`}>{title}</p>
 
@@ -205,9 +205,9 @@ function ProgressStage({ title, isActive, isDone, progress, timing }) {
                 </div>
 
                 {isActive && progress > 0 && (
-                    <div className="w-full bg-primary-100 h-1.5 mt-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-[#4ba8d1]/10 h-1.5 mt-2 rounded-full overflow-hidden">
                         <div
-                            className="bg-primary-500 h-full rounded-full transition-all duration-300"
+                            className="bg-[#4ba8d1] h-full rounded-full transition-all duration-300"
                             style={{ width: `${progress}%` }}
                         ></div>
                     </div>
@@ -271,7 +271,7 @@ function ResearchSources({ sources }) {
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2 text-gray-700">
                     <Book size={18} />
-                    <h3 className="font-medium">Works Consulted ({uniqueSources.length})</h3>
+                    <h3>Works Consulted ({uniqueSources.length})</h3>
                 </div>
                 {uniqueSources.length > 3 && (
                     <button
@@ -307,7 +307,7 @@ function ResearchSources({ sources }) {
             {uniqueSources.length > 3 && expanded === false && (
                 <button
                     onClick={() => setExpanded(true)}
-                    className="mt-2 text-sm text-gray-600 hover:text-gray-800 font-medium"
+                    className="mt-2 text-sm text-gray-600 hover:text-gray-800"
                 >
                     Show {uniqueSources.length - 3} more sources
                 </button>
@@ -316,7 +316,7 @@ function ResearchSources({ sources }) {
             {expanded && uniqueSources.length > 3 && (
                 <button
                     onClick={() => setExpanded(false)}
-                    className="mt-2 text-sm text-gray-600 hover:text-gray-800 font-medium"
+                    className="mt-2 text-sm text-gray-600 hover:text-gray-800"
                 >
                     Show less
                 </button>

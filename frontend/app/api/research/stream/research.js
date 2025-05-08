@@ -21,6 +21,7 @@ export async function generateFollowUpQuestions(query) {
   that would help gather comprehensive information that would fully answer this question.
   The questions should explore different aspects of the topic and help elicit detailed information.
   Ensure the questions in their totality would fully answer the research query and are a little broad.
+  The questions should not be too specific, but rather general and short enough to be answered with the research query.
   
   Research Query: ${query}
   
@@ -81,7 +82,6 @@ export async function answerQuestion(query, question, questionNum, totalQuestion
   Provide a factual answer with relevant information. Include sources or data if available.
   VERY IMPORTANT: When citing sources, include hyperlinks to those sources in your answer.
   Use the format [Source Name](URL) for all citations.
-  Focus on accuracy and relevance to the research topic.
   `;
 
     const completion = await client.chat.completions.create({
@@ -108,63 +108,6 @@ export async function answerQuestion(query, question, questionNum, totalQuestion
         answer,
         question_num: questionNum,
         total: totalQuestions,
-        tool_results: { executed_tools: executedTools }
-    };
-}
-
-export async function gatherResearchData(query, qaPairs) {
-    /**
-     * Use Compound-Beta to gather targeted research data with hyperlinked sources
-     */
-    let context = `Main Query: ${query}\n\nAdditional Information:\n`;
-
-    for (let i = 0; i < qaPairs.length; i++) {
-        context += `${i + 1}. Question: ${qaPairs[i].question}\nAnswer: ${qaPairs[i].answer}\n\n`;
-    }
-
-    const prompt = `You are a research assistant tasked with gathering detailed research data. You MUST call a search tool.
-  I need you to search for information related to this research query and the Research questions.
-  
-  ${context}
-  
-  Gather comprehensive research data with these requirements:
-  1. Search for relevant facts, statistics, and information
-  2. Find authoritative sources for each piece of information
-  3. VERY IMPORTANT: Include HYPERLINKED citations for ALL information using markdown format: [Source Name](URL)
-  4. Gather diverse perspectives on the topic
-  5. Focus on recent and reliable information
-  6. Structure information clearly with headings when appropriate
-  
-  For EACH piece of information, follow this pattern:
-  - State the fact or information clearly
-  - Provide the source with a hyperlink: [Source Name](URL)
-  - Add brief context about why this information is relevant
-  
-  Format your response in clear sections based on different aspects of the topic.
-  `;
-
-    const completion = await client.chat.completions.create({
-        model: COMPOUND_MODEL,
-        messages: [{ role: "user", content: prompt }],
-        max_tokens: 8192
-    });
-
-    const content = completion.choices[0].message.content;
-
-    // Look for executed_tools in different possible locations
-    let executedTools = null;
-    if (completion.choices[0].message.executed_tools) {
-        executedTools = completion.choices[0].message.executed_tools;
-    } else if (completion.choices[0].message.tool_results?.executed_tools) {
-        executedTools = completion.choices[0].message.tool_results.executed_tools;
-    } else if (completion.choices[0].executed_tools) {
-        executedTools = completion.choices[0].executed_tools;
-    } else if (completion.executed_tools) {
-        executedTools = completion.executed_tools;
-    }
-
-    return {
-        content,
         tool_results: { executed_tools: executedTools }
     };
 }

@@ -224,10 +224,10 @@ export default function ResearchReport({ report }) {
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
             {/* Report Header */}
             <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-800 mb-4">{title}</h1>
+                <h1 className="text-2xl text-gray-800 mb-4">{title}</h1>
 
                 <div className="flex flex-wrap gap-3">
                     <button
@@ -289,7 +289,7 @@ export default function ResearchReport({ report }) {
                                 className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
                                 onClick={() => toggleSection(index)}
                             >
-                                <h3 className="font-semibold text-gray-800">{section.title}</h3>
+                                <h3 className="text-gray-800">{section.title}</h3>
                                 {expandedSections.includes(index) ?
                                     <ChevronUp size={20} className="text-gray-500" /> :
                                     <ChevronDown size={20} className="text-gray-500" />
@@ -328,7 +328,7 @@ export default function ResearchReport({ report }) {
                 {/* Questions and Answers Section */}
                 {qaSection && (
                     <div className="mt-8">
-                        <div className="markdown prose max-w-none border-t pt-4">
+                        <div className="markdown prose max-w-none border-t border-gray-200 pt-4">
                             <ReactMarkdown
                                 children={qaSection}
                                 components={{

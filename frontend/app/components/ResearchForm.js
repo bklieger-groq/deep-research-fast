@@ -15,14 +15,14 @@ export default function ResearchForm({ onSubmit }) {
     }
 
     return (
-        <div className="bg-white shadow-lg rounded-xl p-6 border border-gray-100">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Start Your Research</h2>
+        <div className="bg-white rounded-xl p-6 border border-gray-200">
+            <h2 className="text-xl text-gray-800 mb-4">Start Your Research</h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className={`relative transition-all ${isFocused ? 'ring-2 ring-primary-300' : ''}`}>
                     <textarea
                         className="w-full px-4 py-3 border border-gray-200 rounded-lg text-gray-800 focus:outline-none transition-all resize-none min-h-[120px]"
-                        placeholder="Enter your research query here..."
+                        placeholder="What do you want to know?"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         onFocus={() => setIsFocused(true)}
@@ -49,9 +49,9 @@ export default function ResearchForm({ onSubmit }) {
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <ExampleCard
                     title="Current Events"
-                    description="What are the major news stories in the United States this week? Identify themes from specific events."
+                    description="What are the latest headlines in major countries this week?"
                     onClick={() => {
-                        setQuery("What are the major news stories in the United States this week? Identify themes from specific events.")
+                        setQuery("What are the latest headlines in major countries this week?")
                     }}
                 />
                 <ExampleCard
@@ -65,7 +65,7 @@ export default function ResearchForm({ onSubmit }) {
                     title="Cited Historical Research"
                     description="What factors led to the fall of the Roman Empire and what lessons can be drawn for modern societies?"
                     onClick={() => {
-                        setQuery("What are the major political and economic news stories in the United States this week and their potential impacts?")
+                        setQuery("What factors led to the fall of the Roman Empire and what lessons can be drawn for modern societies?")
                     }}
                 />
             </div>
@@ -79,7 +79,7 @@ function ExampleCard({ title, description, onClick }) {
             className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 hover:bg-primary-50 cursor-pointer transition-all"
             onClick={onClick}
         >
-            <h3 className="font-medium text-gray-800 mb-2">{title}</h3>
+            <h3 className="text-gray-800 mb-2">{title}</h3>
             <p className="text-sm text-gray-600">{description}</p>
         </div>
     )
