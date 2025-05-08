@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import ResearchForm from './components/ResearchForm'
 import ResearchProgress from './components/ResearchProgress'
 import ResearchReport from './components/ResearchReport'
+import { Plus } from 'lucide-react'
 
 export default function Home() {
     const [query, setQuery] = useState('')
@@ -139,9 +140,9 @@ export default function Home() {
                 {!isResearching && !report && (
                     <div className="mb-8">
                         <div className="text-center mb-12">
-                            <h1 className="text-4xl font-bold text-gray-800 mb-3">Deep Research, Fast</h1>
-                            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                                Using compound-beta on Groq to generate fast deep research reports by leveraging several compound-beta agents working in parallel.
+                            <h1 className="text-3xl font-bold text-gray-800 mb-3 mt-3">Deep Research, Fast</h1>
+                            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                                Using Compound Beta on Groq to generate fast deep research reports by leveraging several compound-beta-mini agents working in parallel.
                             </p>
                         </div>
                         <ResearchForm onSubmit={startResearch} />
@@ -155,12 +156,14 @@ export default function Home() {
                 {report && (
                     <div className="mt-6">
                         <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-2xl font-bold text-gray-800">Research Results</h2>
+                            <h2 className="text-2xl font-bold text-gray-800">Research Report</h2>
                             <button
                                 onClick={resetResearch}
-                                className="btn btn-outline btn-primary"
+                                className="btn btn-sm bg-transparent hover:bg-orange-50 hover:border-orange-500 border-orange-500 text-orange-500 flex items-center gap-2"
                             >
-                                Start New Research
+                                <Plus size={16} />
+
+                                New Topic
                             </button>
                         </div>
                         <ResearchReport report={report} />
