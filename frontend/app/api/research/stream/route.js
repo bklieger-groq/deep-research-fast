@@ -131,7 +131,7 @@ async function* researchProcessGenerator(query) {
         yield encodeSSE(JSON.stringify({
             status: 'progress',
             step: 'answering_questions',
-            message: 'Conducting research with compound-beta\'s search...',
+            message: 'Conducting research with Compound Beta\'s search...',
             progress: 0,
             timings: timings,
             sources: researchSources

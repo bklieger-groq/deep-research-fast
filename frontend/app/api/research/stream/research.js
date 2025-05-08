@@ -10,7 +10,6 @@ const client = new Groq({
 
 // Constants
 const LLAMA_MODEL = "meta-llama/llama-4-maverick-17b-128e-instruct";
-const COMPOUND_MODEL = "compound-beta";
 const COMPOUND_MODEL_MINI = "compound-beta-mini";
 
 export async function generateFollowUpQuestions(query) {

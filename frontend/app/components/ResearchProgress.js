@@ -141,7 +141,7 @@ export default function ResearchProgress({ status, query }) {
                 />
 
                 <ProgressStage
-                    title="Stage 2: Conducting Research (Compound-beta)"
+                    title="Stage 2: Conducting Research (Compound Beta)"
                     {...getStepStatus('answering_questions')}
                     progress={status.step === 'answering_questions' ? progress : 0}
                     timing={status.timings?.steps?.answering_questions}
