@@ -6,6 +6,7 @@ import { Brain, FileQuestion, BookOpen, FileText, CheckCircle, AlertCircle, Link
 export default function ResearchProgress({ status, query }) {
     const [progress, setProgress] = useState(0)
     const [sources, setSources] = useState([])
+    const [images, setImages] = useState([])
     const [totalDuration, setTotalDuration] = useState(null)
 
     useEffect(() => {
@@ -15,15 +16,12 @@ export default function ResearchProgress({ status, query }) {
             setProgress(100)
         }
 
-        // Update sources when they are available
-        if (status.sources && Array.isArray(status.sources)) {
-            console.log("Sources found in status:", status.sources);
+        // Directly set sources and images from status
+        if (status.sources) {
             setSources(status.sources)
-        } else if (status.status === 'sources_update' && status.sources) {
-            console.log("Sources found in sources_update:", status.sources);
-            setSources(status.sources)
-        } else {
-            console.log("No sources found in status:", status);
+        }
+        if (status.images) {
+            setImages(status.images)
         }
 
         // Update total duration if available
@@ -31,11 +29,6 @@ export default function ResearchProgress({ status, query }) {
             setTotalDuration(status.timings.total.duration);
         }
     }, [status])
-
-    // Debug: Log current sources state
-    useEffect(() => {
-        console.log("Current sources state:", sources);
-    }, [sources])
 
     const getStepIcon = (step) => {
         switch (step) {
@@ -141,7 +134,7 @@ export default function ResearchProgress({ status, query }) {
                 />
 
                 <ProgressStage
-                    title="Stage 2: Conducting Research (Compound-beta)"
+                    title="Stage 2: Conducting Research (Compound Beta)"
                     {...getStepStatus('answering_questions')}
                     progress={status.step === 'answering_questions' ? progress : 0}
                     timing={status.timings?.steps?.answering_questions}
@@ -323,4 +316,4 @@ function ResearchSources({ sources }) {
             )}
         </div>
     )
-} 
+}
