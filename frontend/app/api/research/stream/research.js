@@ -85,7 +85,10 @@ export async function answerQuestion(query, question, questionNum, totalQuestion
 
     const completion = await client.chat.completions.create({
         model: COMPOUND_MODEL_MINI,
-        messages: [{ role: "user", content: prompt }]
+        messages: [{ role: "user", content: prompt }],
+        search_settings: {
+            include_images: true
+        }
     });
 
     const answer = completion.choices[0].message.content;
@@ -102,12 +105,25 @@ export async function answerQuestion(query, question, questionNum, totalQuestion
         executedTools = completion.executed_tools;
     }
 
+    // Extract and log images from search results
+    let allImages = [];
+    if (executedTools) {
+        for (const tool of executedTools) {
+            if (tool.type === 'search' && tool.search_results && tool.search_results.images) {
+                allImages = [...allImages, ...tool.search_results.images];
+            }
+        }
+    }
+
     return {
         question,
         answer,
         question_num: questionNum,
         total: totalQuestions,
-        tool_results: { executed_tools: executedTools }
+        tool_results: {
+            executed_tools: executedTools,
+            images: allImages
+        }
     };
 }
 

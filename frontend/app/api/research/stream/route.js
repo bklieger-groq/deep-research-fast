@@ -97,8 +97,9 @@ function extractSearchUrls(executedTools) {
 // Generator function for the research process
 async function* researchProcessGenerator(query) {
     try {
-        // Track all research sources
+        // Track all research sources and images
         const researchSources = [];
+        const researchImages = new Set(); // Use Set to avoid duplicates
 
         // Keep track of timing information
         const timings = {
@@ -112,7 +113,8 @@ async function* researchProcessGenerator(query) {
             status: 'progress',
             step: 'follow_up_questions',
             message: 'Generating Research plan...',
-            sources: researchSources
+            sources: researchSources,
+            images: Array.from(researchImages)
         }));
 
         const questions = await generateFollowUpQuestions(query);
@@ -134,7 +136,8 @@ async function* researchProcessGenerator(query) {
             message: 'Conducting research with Compound Beta\'s search...',
             progress: 0,
             timings: timings,
-            sources: researchSources
+            sources: researchSources,
+            images: Array.from(researchImages)
         }));
 
         // Process questions
@@ -154,6 +157,7 @@ async function* researchProcessGenerator(query) {
 
             if (result.tool_results && result.tool_results.executed_tools) {
                 const newUrls = extractSearchUrls(result.tool_results.executed_tools);
+                const newImages = result.tool_results.images || [];
 
                 // Add new URLs to research sources
                 for (const url of newUrls) {
@@ -162,11 +166,17 @@ async function* researchProcessGenerator(query) {
                     }
                 }
 
+                // Add new images to research images
+                for (const image of newImages) {
+                    researchImages.add(image);
+                }
+
                 // Send sources update if we have new ones
-                if (newUrls.length > 0) {
+                if (newUrls.length > 0 || newImages.length > 0) {
                     yield encodeSSE(JSON.stringify({
                         status: 'sources_update',
-                        sources: researchSources
+                        sources: researchSources,
+                        images: Array.from(researchImages)
                     }));
                 }
             }
@@ -185,6 +195,7 @@ async function* researchProcessGenerator(query) {
                 message: `Answered question ${completedQuestions}/${totalQuestions}: ${result.question}`,
                 progress: completedQuestions / totalQuestions,
                 sources: researchSources,
+                images: Array.from(researchImages),
                 timings: timings
             }));
         }
@@ -196,6 +207,7 @@ async function* researchProcessGenerator(query) {
             step: 'final_report',
             message: 'Generating final report...',
             sources: researchSources,
+            images: Array.from(researchImages),
             timings: timings
         }));
 
@@ -225,6 +237,7 @@ async function* researchProcessGenerator(query) {
             status: 'complete',
             report: finalReport,
             sources: researchSources,
+            images: Array.from(researchImages),
             timings: timings
         }));
 

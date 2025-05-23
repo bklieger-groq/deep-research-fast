@@ -3,7 +3,7 @@
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { atomDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
-import { Download, Share, ChevronDown, ChevronUp } from 'lucide-react'
+import { Download, Share, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Image } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 
@@ -12,6 +12,8 @@ export default function ResearchReport({ report }) {
     const [expandedSections, setExpandedSections] = useState([])
     const [showShareMessage, setShowShareMessage] = useState(false)
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
+    const [galleryExpanded, setGalleryExpanded] = useState(false)
+    const [selectedImage, setSelectedImage] = useState(null)
 
     if (!report || !report.report) {
         return null
@@ -97,6 +99,16 @@ export default function ResearchReport({ report }) {
             setExpandedSections([...expandedSections, index])
         }
     }
+
+    // Function to handle image click
+    const handleImageClick = (url) => {
+        setSelectedImage(url);
+    };
+
+    // Function to close modal
+    const handleCloseModal = () => {
+        setSelectedImage(null);
+    };
 
     const handleDownload = async () => {
         try {
@@ -223,6 +235,41 @@ export default function ResearchReport({ report }) {
         }
     }
 
+    // Custom image component for ReactMarkdown
+    const ImageComponent = ({ src, alt }) => {
+        return (
+            <div className="my-6">
+                <img
+                    src={src}
+                    alt={alt || 'Research image'}
+                    className="w-full rounded-lg shadow-md"
+                    loading="lazy"
+                />
+            </div>
+        )
+    }
+
+    // Custom components for ReactMarkdown
+    const components = {
+        code({ node, inline, className, children, ...props }) {
+            const match = /language-(\w+)/.exec(className || '')
+            return !inline && match ? (
+                <SyntaxHighlighter
+                    children={String(children).replace(/\n$/, '')}
+                    style={atomDark}
+                    language={match[1]}
+                    PreTag="div"
+                    {...props}
+                />
+            ) : (
+                <code className={className} {...props}>
+                    {children}
+                </code>
+            )
+        },
+        img: ImageComponent
+    }
+
     return (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
             {/* Report Header */}
@@ -256,28 +303,90 @@ export default function ResearchReport({ report }) {
 
             {/* Main Content */}
             <div id="research-report-container" className="markdown-container">
+                {/* Image Gallery - Before Executive Summary */}
+                {report.images && report.images.length > 0 && (
+                    <div className="mb-8">
+                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2 text-gray-700">
+                                    <Image size={18} />
+                                    <h3>Images ({report.images.length})</h3>
+                                </div>
+                                {report.images.length > 3 && (
+                                    <button
+                                        onClick={() => setGalleryExpanded(!galleryExpanded)}
+                                        className="text-gray-500 hover:text-gray-700"
+                                    >
+                                        {galleryExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                {report.images.slice(0, galleryExpanded ? undefined : 3).map((url, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => handleImageClick(url)}
+                                        className="block aspect-video rounded-lg overflow-hidden border border-gray-200 hover:border-gray-300 transition-colors"
+                                    >
+                                        <img
+                                            src={url}
+                                            alt={`Research image ${index + 1}`}
+                                            className="w-full h-full object-cover"
+                                            loading="lazy"
+                                        />
+                                    </button>
+                                ))}
+                            </div>
+
+                            {report.images.length > 3 && !galleryExpanded && (
+                                <button
+                                    onClick={() => setGalleryExpanded(true)}
+                                    className="mt-2 text-sm text-gray-600 hover:text-gray-800"
+                                >
+                                    Show {report.images.length - 3} more images
+                                </button>
+                            )}
+
+                            {galleryExpanded && report.images.length > 3 && (
+                                <button
+                                    onClick={() => setGalleryExpanded(false)}
+                                    className="mt-2 text-sm text-gray-600 hover:text-gray-800"
+                                >
+                                    Show less
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Image Modal */}
+                {selectedImage && (
+                    <div
+                        className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4"
+                        onClick={handleCloseModal}
+                    >
+                        <div className="relative max-w-4xl w-full">
+                            <button
+                                onClick={handleCloseModal}
+                                className="absolute -top-12 right-0 text-white hover:text-gray-300"
+                            >
+                                <ChevronUp size={24} />
+                            </button>
+                            <img
+                                src={selectedImage}
+                                alt="Full size research image"
+                                className="w-full h-auto rounded-lg"
+                            />
+                        </div>
+                    </div>
+                )}
+
                 {/* Render the first paragraph (summary) with full markdown */}
                 <div className="markdown prose max-w-none mb-8">
                     <ReactMarkdown
                         children={sections[0]?.content || ''}
-                        components={{
-                            code({ node, inline, className, children, ...props }) {
-                                const match = /language-(\w+)/.exec(className || '')
-                                return !inline && match ? (
-                                    <SyntaxHighlighter
-                                        children={String(children).replace(/\n$/, '')}
-                                        style={atomDark}
-                                        language={match[1]}
-                                        PreTag="div"
-                                        {...props}
-                                    />
-                                ) : (
-                                    <code className={className} {...props}>
-                                        {children}
-                                    </code>
-                                )
-                            }
-                        }}
+                        components={components}
                     />
                 </div>
 
@@ -300,24 +409,7 @@ export default function ResearchReport({ report }) {
                                 <div className="p-4 markdown prose max-w-none">
                                     <ReactMarkdown
                                         children={section.content}
-                                        components={{
-                                            code({ node, inline, className, children, ...props }) {
-                                                const match = /language-(\w+)/.exec(className || '')
-                                                return !inline && match ? (
-                                                    <SyntaxHighlighter
-                                                        children={String(children).replace(/\n$/, '')}
-                                                        style={atomDark}
-                                                        language={match[1]}
-                                                        PreTag="div"
-                                                        {...props}
-                                                    />
-                                                ) : (
-                                                    <code className={className} {...props}>
-                                                        {children}
-                                                    </code>
-                                                )
-                                            }
-                                        }}
+                                        components={components}
                                     />
                                 </div>
                             )}
@@ -331,25 +423,7 @@ export default function ResearchReport({ report }) {
                         <div className="markdown prose max-w-none border-t border-gray-200 pt-4">
                             <ReactMarkdown
                                 children={qaSection}
-                                components={{
-                                    code({ node, inline, className, children, ...props }) {
-                                        const match = /language-(\w+)/.exec(className || '')
-                                        return !inline && match ? (
-                                            <SyntaxHighlighter
-                                                children={String(children).replace(/\n$/, '')}
-                                                style={atomDark}
-                                                language={match[1]}
-                                                PreTag="div"
-                                                customStyle={{ backgroundColor: '#2d2d2d' }}
-                                                {...props}
-                                            />
-                                        ) : (
-                                            <code className={className} {...props}>
-                                                {children}
-                                            </code>
-                                        )
-                                    }
-                                }}
+                                components={components}
                             />
                         </div>
                     </div>

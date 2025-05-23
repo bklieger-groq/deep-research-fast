@@ -81,24 +81,29 @@ export default function Home() {
                             const data = JSON.parse(dataMatch[1]);
 
                             if (data.status === 'progress') {
-                                setProgressStatus(data);
-                            } else if (data.status === 'sources_update') {
-                                // Update the progress status with the new sources
-                                // but preserve the current step and message
                                 setProgressStatus(prevStatus => ({
-                                    ...prevStatus,
-                                    sources: data.sources
+                                    ...data,
+                                    images: data.images || prevStatus.images || []
                                 }));
+                            } else if (data.status === 'sources_update') {
+                                setProgressStatus(prevStatus => {
+                                    const newStatus = {
+                                        ...prevStatus,
+                                        sources: data.sources || prevStatus.sources || [],
+                                        images: data.images || prevStatus.images || []
+                                    };
+                                    return newStatus;
+                                });
                             } else if (data.status === 'complete') {
-                                // Update progress to complete but don't set isResearching to false
-                                // This ensures the progress component stays visible
-                                setProgressStatus({
+                                const completeStatus = {
                                     ...data,
                                     status: 'complete',
                                     step: 'final_report',
-                                    message: 'Report generation complete!'
-                                });
-                                setReport(data);
+                                    message: 'Report generation complete!',
+                                    images: data.images || []
+                                };
+                                setProgressStatus(completeStatus);
+                                setReport(completeStatus);
                             } else if (data.status === 'error') {
                                 setError(data.message);
                                 setProgressStatus({ status: 'error', message: data.message });
