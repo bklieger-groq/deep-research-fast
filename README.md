@@ -1,85 +1,42 @@
-# Research Assistant
+# Deep Research Fast
 
-A modern research assistant app powered by Groq's AI models that generates comprehensive research reports with Research questions and hyperlinked sources.
+A powerful research automation system leveraging compound beta mini agents for efficient and comprehensive information gathering and analysis.
 
-## Features
+## Overview
 
-- Beautiful Next.js frontend with a responsive, modern UI
-- Integrated Next.js API routes replacing the separate FastAPI backend
-- Real-time progress updates during research process with Server-Sent Events (SSE)
-- Comprehensive research reports with sections, Research questions, and hyperlinked sources
-- Download reports as Markdown files
-- Simplified deployment with a single Next.js application
+Deep Research Fast is an innovative approach to automated research that utilizes multiple specialized mini agents working in concert to gather, analyze, and synthesize information. Each agent is designed to handle specific aspects of the research process, creating a compound system that can tackle complex research tasks efficiently.
 
-## Technologies
+## Key Features
 
-- **Frontend**: Next.js, React, Tailwind CSS, DaisyUI
-- **Backend**: Next.js API Routes
-- **AI Models**: Groq LLMs (Llama-4-Maverick, Compound-Beta)
-- **Containerization**: Docker (optional)
+- **Compound Agent Architecture**: Multiple specialized mini agents working together
+- **Beta Testing Framework**: Continuous improvement through feedback loops
+- **Fast Processing**: Optimized for quick research and analysis
+- **Modular Design**: Easy to extend and customize for specific research needs
 
-## Setup & Installation
+## Getting Started
 
 ### Prerequisites
 
-- Node.js (v16 or newer)
-- Groq API Key (sign up at [groq.com](https://groq.com))
+- Python 3.8+
+- pip (Python package manager)
 
 ### Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/research-assistant.git
-   cd research-assistant
-   ```
+```bash
+# Clone the repository
+git clone https://github.com/bklieger-groq/deep-research-fast.git
 
-2. Install dependencies:
-   ```bash
-   cd frontend
-   npm install
-   ```
+# Navigate to project directory
+cd deep-research-fast
 
-3. Create a `.env.local` file in the frontend directory with your Groq API key:
-   ```
-   GROQ_API_KEY=your_groq_api_key_here
-   ```
+# Install dependencies
+pip install -r requirements.txt
+```
 
-4. Start the application:
-   ```bash
-   npm run dev
-   ```
+## Contributing
 
-5. Access the application:
-   - [http://localhost:3000](http://localhost:3000)
-
-## Usage
-
-1. Enter your research query in the input field
-2. Submit the form to start the research process
-3. Watch real-time progress as the system:
-   - Generates Research questions
-   - Answers research questions
-   - Gathers comprehensive research data
-   - Compiles the final report
-4. View the final report with:
-   - Executive summary
-   - Organized content sections
-   - Sources with hyperlinks
-   - Research questions and answers
-5. Download the report as a Markdown file
-
-## Docker Deployment (Optional)
-
-If you prefer using Docker:
-
-1. Build and start the container:
-   ```bash
-   docker build -t research-assistant ./frontend
-   docker run -p 3000:3000 -e GROQ_API_KEY=your_groq_api_key_here research-assistant
-   ```
-
-2. Access the application at [http://localhost:3000](http://localhost:3000)
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-[MIT License](LICENSE)
+This project is licensed under the MIT License - see the LICENSE file for details.
