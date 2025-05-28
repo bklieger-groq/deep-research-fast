@@ -1,24 +1,22 @@
-# Deep Research Fast
+# Deep Research Fast, Powered by Compound Beta on Groq
 
-A powerful research automation system leveraging compound beta mini agents for efficient and comprehensive information gathering and analysis.
-
-## Overview
-
-Deep Research Fast is an innovative approach to automated research that utilizes multiple specialized mini agents working in concert to gather, analyze, and synthesize information. Each agent is designed to handle specific aspects of the research process, creating a compound system that can tackle complex research tasks efficiently.
+Imagine deep research, spanning 50+ sources, taking 10 seconds. This is possible, only on Groq. Using multiple compound-beta-mini agents in parallel, Deep Research Fast achieves record speeds while producing comprehensive research reports.
 
 ## Key Features
 
-- **Compound Agent Architecture**: Multiple specialized mini agents working together
-- **Beta Testing Framework**: Continuous improvement through feedback loops
-- **Fast Processing**: Optimized for quick research and analysis
-- **Modular Design**: Easy to extend and customize for specific research needs
+- **Compound Agent Architecture**: Multiple mini agents working independently, before results are combined
+- **Multimodal Results**: Text, links, and images are all returned in the report
+- **Lightning Fast**: Research reports generated in seconds, not minutes
+- **Comprehensive Coverage**: Access to an average of 40-60 sources for thorough research
+- **Modern UI**: Clean and intuitive user interface for seamless research experience
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.8+
-- pip (Python package manager)
+- Node.js
+- npm
+- A Groq API key (can be obtained for free from console.groq.com)
 
 ### Installation
 
@@ -29,9 +27,24 @@ git clone https://github.com/bklieger-groq/deep-research-fast.git
 # Navigate to project directory
 cd deep-research-fast
 
+# Navigate to the frontend
+cd frontend
+
 # Install dependencies
-pip install -r requirements.txt
+npm install
+
+# Set up environment variables
+export GROQ_API_KEY=gsk...
+
+# Run app
+npm run dev
 ```
+
+## Usage
+
+1. Enter your research query in the search box
+2. Click "Research" to start the process
+3. View your comprehensive research report in seconds
 
 ## Contributing
 
